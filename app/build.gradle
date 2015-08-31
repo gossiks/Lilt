@@ -26,4 +26,8 @@ dependencies {
     //design
     compile 'com.makeramen:roundedimageview:2.2.0'
     compile 'com.romainpiel.shimmer:library:1.4.0@aar'
+    compile 'me.grantland:autofittextview:0.2.+'
+
+    //backend
+    compile 'com.firebase:firebase-client-android:2.3.1+'
 }

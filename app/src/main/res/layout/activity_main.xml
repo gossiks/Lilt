@@ -21,7 +21,7 @@
         android:layout_height="wrap_content" />
 
     <com.romainpiel.shimmer.ShimmerTextView
-        android:id="@+id/shimmer_tv"
+        android:id="@+id/nickname_main"
         android:text="nickname"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -29,19 +29,47 @@
         android:textSize="25sp"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/avatar"
-        android:layout_toEndOf="@+id/avatar" />
+        android:layout_toEndOf="@+id/avatar"
+        android:layout_marginLeft="10dp" />
 
     <com.romainpiel.shimmer.ShimmerTextView
+        android:id="@+id/telephone_main"
+        android:text="   "
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#444"
         android:textSize="25sp"
-        android:layout_below="@+id/shimmer_tv"
-        android:layout_alignLeft="@+id/shimmer_tv"
-        android:layout_alignStart="@+id/shimmer_tv"
-        android:id="@+id/telephone_number"
-        android:layout_alignBottom="@+id/avatar"
-        android:layout_toLeftOf="@+id/shimmer_tv"
-        android:layout_toStartOf="@+id/shimmer_tv" />
+        android:layout_below="@+id/nickname_main"
+        android:layout_toRightOf="@+id/avatar"
+        android:layout_toEndOf="@+id/avatar" />
+
+    <TextView
+        android:id="@+id/ringtone_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Choose your ringtone here"
+        android:layout_gravity="center"
+        android:layout_below="@+id/avatar"
+        android:layout_alignLeft="@+id/avatar"
+        android:layout_alignStart="@+id/avatar" />
+
+    <Button
+        android:id="@+id/change_ringtone_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Change"
+        android:layout_alignTop="@+id/ringtone_main"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:id="@+id/set_ringtones_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set ringtones for all avaliable contacts "
+        android:layout_below="@+id/change_ringtone_main"
+        android:layout_centerHorizontal="true" />
+
 
 </RelativeLayout>

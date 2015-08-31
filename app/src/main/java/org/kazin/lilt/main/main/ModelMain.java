@@ -10,4 +10,8 @@ public class ModelMain {
     public ModelMain(ViewerMain viewer) {
         this.viewer = viewer;
     }
+
+    public void onCreate() {
+
+    }
 }

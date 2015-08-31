@@ -21,6 +21,6 @@ public class ViewerMain {
     }
 
     public void onCreate() {
-
+        model.onCreate();
     }
 }
