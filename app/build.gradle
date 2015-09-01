@@ -30,4 +30,6 @@ dependencies {
 
     //backend
     compile 'com.firebase:firebase-client-android:2.3.1+'
+    compile 'com.squareup.okhttp:okhttp:2.5.0'
+    compile group: 'commons-io', name: 'commons-io', version: '2.0.1'
 }

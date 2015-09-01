@@ -33,8 +33,8 @@ public class Backend {
 
     // work methods - sms
 
-    public void sendAuthSms(String phoneNumber,String checkCode){
-        mSmsMan.sendSms(phoneNumber, checkCode);
+    public void sendAuthSms(String phoneNumber,String checkCode,jCallback callback){
+        mSmsMan.sendSms(phoneNumber, checkCode,callback);
     }
 
     // work methods - firebase
