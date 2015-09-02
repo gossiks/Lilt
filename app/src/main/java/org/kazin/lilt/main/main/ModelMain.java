@@ -1,9 +1,7 @@
 package org.kazin.lilt.main.main;
 
-import android.text.Editable;
-
 import org.kazin.lilt.backend.Backend;
-import org.kazin.lilt.objects.LiltRingtone;
+import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.LiltUser;
 import org.kazin.lilt.objects.jCallback;
 
@@ -23,7 +21,7 @@ public class ModelMain {
 
     //user stuff
     LiltUser mUser = null;
-    LiltRingtone mRingtone = null;
+    LiltRingtone2 mRingtone = null;
 
     public ModelMain(ViewerMain viewer) {
         this.viewer = viewer;

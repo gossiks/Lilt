@@ -5,16 +5,13 @@ import android.content.Context;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.MutableData;
-import com.firebase.client.Transaction;
 import com.firebase.client.ValueEventListener;
 
-import org.kazin.lilt.objects.LiltRingtone;
+import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.jCallback;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by Alexey on 31.08.2015.
@@ -42,7 +39,7 @@ public class FirebaseMan {
         mFirebase = new Firebase("https://lilt.firebaseio.com/");
     }
 
-    public void saveRingtone(final String phoneNumber, final LiltRingtone ringtone, final jCallback callback) {
+    public void saveRingtone(final String phoneNumber, final LiltRingtone2 ringtone, final jCallback callback) {
         final Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber);
 
         Map<String, Object> ringtoneSet = new HashMap<>();
@@ -69,7 +66,7 @@ public class FirebaseMan {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String ringtoneBase64 = (String) dataSnapshot.child("ringtone").getValue();
                 String ringtoneTitle = (String) dataSnapshot.child("ringtone_title").getValue();
-                LiltRingtone ringtone = new LiltRingtone(ringtoneBase64,ringtoneTitle, phoneNumber);
+                LiltRingtone2 ringtone = new LiltRingtone2(ringtoneBase64,ringtoneTitle, phoneNumber);
                 callback.success(ringtone);
             }
 
