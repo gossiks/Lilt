@@ -3,6 +3,7 @@ package org.kazin.lilt.backend;
 import android.content.Context;
 
 import org.kazin.lilt.main.main.MainActivity;
+import org.kazin.lilt.objects.LiltRingtone;
 import org.kazin.lilt.objects.jCallback;
 
 /**
@@ -19,7 +20,7 @@ public class Backend {
     //initialize methods
 
     public Backend() {
-        mContext = MainActivity.getmMainContext();
+        mContext = MainActivity.getMainContext();
         mFirebaseMan = FirebaseMan.getInstance(mContext);
         mSmsMan = SmsMan.getInstance(mContext);
     }
@@ -38,7 +39,15 @@ public class Backend {
     }
 
     // work methods - firebase
-    public void saveRingTone(String phoneNumber, String mp3Base64encoded, jCallback callback){
-        mFirebaseMan.saveRingtone(phoneNumber, mp3Base64encoded, callback);
+    public void saveRingTone(String phoneNumber, LiltRingtone ringtone, jCallback callback){
+        mFirebaseMan.saveRingtone(phoneNumber, ringtone, callback);
+    }
+
+    public void getRingtone(String phoneNumber, jCallback callback){
+        mFirebaseMan.getRingtone(phoneNumber, callback);
+    }
+
+    public void getRingtoneTitle(String phoneNumber, jCallback callback){
+        mFirebaseMan.getRingtoneTitle(phoneNumber, callback);
     }
 }

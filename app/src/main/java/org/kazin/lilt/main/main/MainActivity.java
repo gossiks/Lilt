@@ -1,5 +1,6 @@
 package org.kazin.lilt.main.main;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -15,20 +16,23 @@ import org.kazin.lilt.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static Context mMainContext;
+    static Context mMainContext;
+    static MainActivity mMainActivity;
 
     ViewerMain viewer = null;
-    private RoundedImageView mAvatar;
-    private ShimmerTextView mNickname;
-    private ShimmerTextView mTelephone;
-    private TextView mRingtone;
-    private Button mChangeRingtone;
-    private Button mSetRingtones;
+    RoundedImageView mAvatar;
+    ShimmerTextView mNickname;
+    ShimmerTextView mTelephone;
+    TextView mRingtone;
+    Button mChangeRingtone;
+    Button mSetRingtones;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mMainContext = this;
+        mMainActivity = this;
 
         setMainContext(this);
 
@@ -41,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         mSetRingtones = (Button) findViewById(R.id.set_ringtones_main);
 
         if(viewer==null){
-            viewer = ViewerMain.getInstance();
+            viewer = ViewerMain.getInstance(this);
         }
         viewer.onCreate();
     }
@@ -72,8 +76,12 @@ public class MainActivity extends AppCompatActivity {
     //misc
 
 
-    public static Context getmMainContext() {
+    public static Context getMainContext() {
         return mMainContext;
+    }
+
+    public static MainActivity getActivity(){
+        return mMainActivity;
     }
 
     private static void setMainContext(Context context) {

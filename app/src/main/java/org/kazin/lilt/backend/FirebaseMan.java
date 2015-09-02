@@ -9,8 +9,12 @@ import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
 import com.firebase.client.ValueEventListener;
 
-import org.kazin.lilt.objects.Ringtone;
+import org.kazin.lilt.objects.LiltRingtone;
 import org.kazin.lilt.objects.jCallback;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by Alexey on 31.08.2015.
@@ -38,12 +42,16 @@ public class FirebaseMan {
         mFirebase = new Firebase("https://lilt.firebaseio.com/");
     }
 
-    public void saveRingtone(String phoneNumber, final Ringtone ringtone, final jCallback callback) {
-        Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber);
-        tempRingtoneRef.setValue(ringtone.getmBase64ringtone(), new Firebase.CompletionListener() {
+    public void saveRingtone(final String phoneNumber, final LiltRingtone ringtone, final jCallback callback) {
+        final Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber);
+
+        Map<String, Object> ringtoneSet = new HashMap<>();
+        ringtoneSet.put("ringtone", ringtone.getBase64ringtone());
+        ringtoneSet.put("ringtone_title", ringtone.getTitle());
+        tempRingtoneRef.updateChildren(ringtoneSet, new Firebase.CompletionListener() {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                if (firebaseError==null){
+                if (firebaseError == null) {
                     callback.success(null);
                 } else {
                     callback.fail(firebaseError.toString());
@@ -52,13 +60,16 @@ public class FirebaseMan {
         });
     }
 
+
+
     public void getRingtone(final String phoneNumber, final jCallback callback){
         Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber);
         tempRingtoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String ringtoneBase64 = (String) dataSnapshot.getValue();
-                Ringtone  ringtone = new Ringtone(ringtoneBase64, phoneNumber);
+                String ringtoneBase64 = (String) dataSnapshot.child("ringtone").getValue();
+                String ringtoneTitle = (String) dataSnapshot.child("ringtone_title").getValue();
+                LiltRingtone ringtone = new LiltRingtone(ringtoneBase64,ringtoneTitle, phoneNumber);
                 callback.success(ringtone);
             }
 
@@ -69,4 +80,19 @@ public class FirebaseMan {
         });
     }
 
+    public void getRingtoneTitle(final String phoneNumber, final jCallback callback) {
+        Firebase tempRingtoneRef = mFirebase.child("user").child(phoneNumber).child("ringtone_title");
+        tempRingtoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String ringtoneTitle = (String) dataSnapshot.getValue();
+                callback.success(ringtoneTitle);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                callback.fail(firebaseError.toString());
+            }
+        });
+    }
 }

@@ -11,6 +11,11 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -27,6 +32,7 @@ dependencies {
     compile 'com.makeramen:roundedimageview:2.2.0'
     compile 'com.romainpiel.shimmer:library:1.4.0@aar'
     compile 'me.grantland:autofittextview:0.2.+'
+    compile 'com.iangclifton.android:floatlabel:1.0.4'
 
     //backend
     compile 'com.firebase:firebase-client-android:2.3.1+'
