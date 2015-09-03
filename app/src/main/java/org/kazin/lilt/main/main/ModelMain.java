@@ -55,8 +55,14 @@ public class ModelMain {
 
     //Dialog Login handling
     public void onDialogLoginEnterTel(String text) {
-        sendAuthSms(text);
-        viewer.showLoginDialogApprove();
+        if(text.length()==0){
+            viewer.showError("Enter the number, please");
+        } else {
+            sendAuthSms(text);
+            viewer.dismissLoginDialog();
+            viewer.showLoginDialogApprove();
+        }
+
     }
 
     public void onResendSms() {
@@ -77,7 +83,7 @@ public class ModelMain {
     public void onApproveCodeEnter(String text) {
         if(mUser.getCodeApprove().equals(text)){
             viewer.showToast("Phone approved!");
-            viewer.dismissLoginDialog();
+            viewer.dismissLoginApproveDialog();
         } else {
             viewer.showError("Wrong code, resending new one");
             onResendSms();

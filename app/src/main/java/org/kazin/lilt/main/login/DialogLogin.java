@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
 
 import com.iangclifton.android.floatlabel.FloatLabel;
 
@@ -49,10 +48,21 @@ public class DialogLogin extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        viewer.onDialogLoginEnterTel(mTelephoneNumberEditText.getEditText().getText().toString());
+                        //viewer.onDialogLoginEnterTel(mTelephoneNumberEditText.getEditText().getText().toString());
                     }
                 });
 
         return builder.create();
+    }
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+        //handle cancel in model
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        //handle dismiss in model
+        super.onDismiss(dialog);
     }
 }

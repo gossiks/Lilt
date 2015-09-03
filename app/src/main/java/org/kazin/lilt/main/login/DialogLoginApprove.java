@@ -49,7 +49,7 @@ public class DialogLoginApprove extends DialogFragment {
             public void onClick(DialogInterface dialog, int which) {
                 viewer.onApproveCodeEnter(approveCode.getEditText().getText().toString());
             }
-        }).setNegativeButton("Resend sms", new DialogInterface.OnClickListener() {
+        }).setNeutralButton("Resend sms", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 viewer.onResendSms();
@@ -57,5 +57,10 @@ public class DialogLoginApprove extends DialogFragment {
         });
 
         return builder.create();
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        //handle in model
     }
 }

@@ -45,7 +45,11 @@ public class ViewerMain {
         mDialogLoginApprove.show(MainActivity.getActivity().getSupportFragmentManager(), "LoginDialogApproveFragment");
     }
 
-    public void dismissLoginDialog() {
+    public void dismissLoginDialog(){
+        mDialogLogin.dismiss();
+    }
+
+    public void dismissLoginApproveDialog() {
         mDialogLoginApprove.dismiss();
     }
 
