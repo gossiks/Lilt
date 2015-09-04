@@ -7,10 +7,12 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
+import org.kazin.lilt.main.main.ModelMain;
 import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.jCallback;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -66,7 +68,7 @@ public class FirebaseMan {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String ringtoneBase64 = (String) dataSnapshot.child("ringtone").getValue();
                 String ringtoneTitle = (String) dataSnapshot.child("ringtone_title").getValue();
-                LiltRingtone2 ringtone = new LiltRingtone2(ringtoneBase64,ringtoneTitle, phoneNumber);
+                LiltRingtone2 ringtone = new LiltRingtone2(ringtoneBase64, ringtoneTitle, phoneNumber);
                 callback.success(ringtone);
             }
 
@@ -79,11 +81,16 @@ public class FirebaseMan {
 
     public void getRingtoneTitle(final String phoneNumber, final jCallback callback) {
         Firebase tempRingtoneRef = mFirebase.child("user").child(phoneNumber).child("ringtone_title");
+
         tempRingtoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String ringtoneTitle = (String) dataSnapshot.getValue();
-                callback.success(ringtoneTitle);
+                if(dataSnapshot.getValue()==null){
+                    callback.success("Ringtone not defined yet");
+                } else {
+                    String ringtoneTitle = (String) dataSnapshot.getValue();
+                    callback.success(ringtoneTitle);
+                }
             }
 
             @Override
@@ -91,5 +98,30 @@ public class FirebaseMan {
                 callback.fail(firebaseError.toString());
             }
         });
+    }
+
+    public void getAllRingtones(List<String> listOfAllContactNumbers, ModelMain.GetAllRingtonesCallback getAllRingtonesCallback, ModelMain.GetAllRingtonesProgressCallback getAllRingtonesProgressCallback) {
+        for(String number : listOfAllContactNumbers){
+            getRingtone(number, new GetSingleRingtoneCallback(getAllRingtonesProgressCallback));
+        }
+    }
+
+    // private callbacks
+    private class GetSingleRingtoneCallback implements jCallback{
+        private ModelMain.GetAllRingtonesProgressCallback mProgressCallback;
+
+        public GetSingleRingtoneCallback(ModelMain.GetAllRingtonesProgressCallback callback) {
+            mProgressCallback = callback;
+        }
+
+        @Override
+        public void success(Object object) {
+            mProgressCallback.progress(object);
+        }
+
+        @Override
+        public void fail(String error) {
+            mProgressCallback.failItem(error);
+        }
     }
 }

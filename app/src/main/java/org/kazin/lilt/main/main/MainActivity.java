@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -47,6 +48,13 @@ public class MainActivity extends AppCompatActivity {
         if(viewer==null){
             viewer = ViewerMain.getInstance(this);
         }
+
+        mSetRingtones.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewer.onSetRingtones();
+            }
+        });
         viewer.onCreate();
     }
 

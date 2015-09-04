@@ -3,8 +3,11 @@ package org.kazin.lilt.backend;
 import android.content.Context;
 
 import org.kazin.lilt.main.main.MainActivity;
+import org.kazin.lilt.main.main.ModelMain;
 import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.jCallback;
+
+import java.util.List;
 
 /**
  * Created by Alexey on 31.08.2015.
@@ -49,5 +52,9 @@ public class Backend {
 
     public void getRingtoneTitle(String phoneNumber, jCallback callback){
         mFirebaseMan.getRingtoneTitle(phoneNumber, callback);
+    }
+
+    public void getAllRingtones(List<String> listOfAllContactNumbers, ModelMain.GetAllRingtonesCallback getAllRingtonesCallback, ModelMain.GetAllRingtonesProgressCallback getAllRingtonesProgressCallback) {
+        mFirebaseMan.getAllRingtones(listOfAllContactNumbers, getAllRingtonesCallback,getAllRingtonesProgressCallback);
     }
 }

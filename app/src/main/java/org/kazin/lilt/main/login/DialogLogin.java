@@ -2,12 +2,12 @@ package org.kazin.lilt.main.login;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 
 import com.iangclifton.android.floatlabel.FloatLabel;
 
@@ -39,30 +39,24 @@ public class DialogLogin extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()); //this class walkaround the necessity of dismissing of dialog if button handler is not null
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View convertView = inflater.inflate(R.layout.dialog_login, null);
 
         mTelephoneNumberEditText = (FloatLabel) convertView.findViewById(R.id.telephone_number_dialog_login);
-        builder.setView(convertView)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        //viewer.onDialogLoginEnterTel(mTelephoneNumberEditText.getEditText().getText().toString());
-                    }
-                });
+
+        Button okButton = (Button) convertView.findViewById(R.id.ok_dialog_login);
+
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewer.onDialogLoginEnterTel(mTelephoneNumberEditText.getEditText().getText().toString());
+            }
+        });
+        builder.setView(convertView);
 
         return builder.create();
     }
 
-    @Override
-    public void onCancel(DialogInterface dialog) {
-        //handle cancel in model
-    }
 
-    @Override
-    public void onDismiss(DialogInterface dialog) {
-        //handle dismiss in model
-        super.onDismiss(dialog);
-    }
 }

@@ -1,16 +1,34 @@
 package org.kazin.lilt.main.main;
 
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.provider.ContactsContract;
+import android.util.Log;
+
 import org.kazin.lilt.backend.Backend;
+import org.kazin.lilt.managers.ProgressLoadingMan;
 import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.LiltUser;
 import org.kazin.lilt.objects.jCallback;
+import org.kazin.lilt.objects.jProgressCallback;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 /**
  * Created by Alexey on 30.08.2015.
  */
 public class ModelMain {
+
+    //DEBUG REMEMBER
+    boolean doNotDisplayLoginDialog = true;
+
+
+
 
     private static ModelMain model;
     private static ViewerMain viewer;
@@ -20,8 +38,12 @@ public class ModelMain {
 
 
     //user stuff
-    LiltUser mUser = null;
-    LiltRingtone2 mRingtone = null;
+    private LiltUser mUser;
+    private LiltRingtone2 mRingtone = null;
+
+    //count stuff
+    private ProgressLoadingMan mProgressRingtonesLoading;
+    private ContentResolver mContentResolver;
 
     public ModelMain(ViewerMain viewer) {
         this.viewer = viewer;
@@ -45,6 +67,10 @@ public class ModelMain {
     }
 
     public void onResume(){
+        if(doNotDisplayLoginDialog){
+            mUser = new LiltUser("79639268115");
+
+        }
         if (!isUserLoggedIn()){
             viewer.showLoginDialog();
         }
@@ -77,7 +103,7 @@ public class ModelMain {
         }
         mUser.setCodeApprove(String.format("%04d", random));
 
-        mBackend.sendAuthSms(text,mUser.getCodeApprove(), new SendSmsCallback());
+        mBackend.sendAuthSms(text, mUser.getCodeApprove(), new SendSmsCallback());
     }
 
     public void onApproveCodeEnter(String text) {
@@ -85,11 +111,23 @@ public class ModelMain {
             viewer.showToast("Phone approved!");
             viewer.dismissLoginApproveDialog();
         } else {
-            viewer.showError("Wrong code, resending new one");
-            onResendSms();
+            viewer.showError("Wrong code!");
         }
     }
 
+    public void onSetRingtones() {
+
+        AsyncTask<Void, Integer, Void> getAllRingtones = new AsyncTask<Void, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                List<String> listOfAllContactNumbers = getAllContactsFromPhone();
+                mProgressRingtonesLoading = new ProgressLoadingMan(listOfAllContactNumbers.size());
+                mBackend.getAllRingtones(listOfAllContactNumbers, new GetAllRingtonesCallback(), new GetAllRingtonesProgressCallback(mProgressRingtonesLoading));
+                return null;
+            }
+        };
+        getAllRingtones.execute();
+    }
 
 
     //callbacks
@@ -121,6 +159,40 @@ public class ModelMain {
         }
     }
 
+    //get all ringtones callback
+    public class GetAllRingtonesCallback implements jCallback{
+        @Override
+        public void success(Object object) {
+            viewer
+        }
+
+        @Override
+        public void fail(String error) {
+
+        }
+    }
+
+    // get all ringtones PROGRESS callback
+    public class GetAllRingtonesProgressCallback implements jProgressCallback {
+        private final ProgressLoadingMan progressManager;
+
+        public GetAllRingtonesProgressCallback(ProgressLoadingMan progressRingtonesLoading) {
+            progressManager = progressRingtonesLoading;
+        }
+
+        @Override
+        public void progress(Object progress) {
+            progressManager.addProgress();
+            setContactRingtone((LiltRingtone2) progress);
+        }
+
+        @Override
+        public void failItem(String error) {
+            progressManager.addError();
+            Log.d("apkapk", "GetAllRingtonesProgress - item error: "+error );
+        }
+    }
+
     //misc user methods
     private boolean isUserLoggedIn(){
         return mUser != null;
@@ -128,5 +200,57 @@ public class ModelMain {
 
     private void logOff(){
         mUser = null;
+    }
+
+    //phone contact method
+
+    private void setContactRingtone(LiltRingtone2 ringtone){
+        mContentResolver = MainActivity.getActivity().getContentResolver();
+        Uri uri  = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(ringtone.getTelephoneNumber()));
+        Cursor contactCursor = mContentResolver.query(uri, null, null, null, null);
+        while(contactCursor.moveToNext()){
+            contactCursor.get
+        }
+    }
+
+    private List<String> getAllContactsFromPhone(){
+        List<String> phoneNumbers;
+        ContentResolver cr = MainActivity.getActivity().getContentResolver();
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                null, null, null, null);
+        if (cur.getCount() > 0) {
+            phoneNumbers = new ArrayList<>(cur.getCount());
+            while (cur.moveToNext()) {
+                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY));
+                if (Integer.parseInt(cur.getString(
+                        cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                    Cursor pCur = cr.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            new String[]{id}, null);
+                    //while (pCur.moveToNext()) { //this is for all phones
+                        pCur.moveToLast(); //hope this is the main number
+                        String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                        Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
+                                + formatNumber(phoneNo));
+                        phoneNumbers.add(phoneNo);
+                    //}
+                    pCur.close();
+                }
+            }
+        }
+        cur.close();
+        return null;
+    }
+
+    private String formatNumber(String telephoneNumber){
+        //String normalizedNumber = PhoneNumberUtils.normalizeNumber(telephoneNumber); this works only in lollipop
+        String normalizedNumber = telephoneNumber.replaceAll("[^\\d]", "");
+        if (normalizedNumber.startsWith("8") & normalizedNumber.length()==11){ //walkaround for russian 8 instead of +7
+            normalizedNumber = 7+normalizedNumber.substring(1);
+        }
+        return normalizedNumber;
     }
 }

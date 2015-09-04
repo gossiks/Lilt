@@ -77,4 +77,8 @@ public class ViewerMain {
     public void showToast(String text) {
         Toast.makeText(MainActivity.getMainContext(), text, Toast.LENGTH_SHORT);
     }
+
+    public void onSetRingtones() {
+        model.onSetRingtones();
+    }
 }
