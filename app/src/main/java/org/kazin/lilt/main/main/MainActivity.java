@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,13 +25,7 @@ public class MainActivity extends AppCompatActivity {
     static MainActivity mMainActivity;
 
     ViewerMain viewer = null;
-    RoundedImageView mAvatar;
-    ShimmerTextView mNickname;
-    ShimmerTextView mTelephone;
-    TextView mRingtone;
-    Button mChangeRingtone;
-    Button mSetRingtones;
-    ProgressBar mProgressBarUploadRingtone;
+    RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,14 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
         setMainContext(this);
 
-        mAvatar = (RoundedImageView) findViewById(R.id.avatar);
-        mNickname = (ShimmerTextView) findViewById(R.id.nickname_main);
-        mTelephone = (ShimmerTextView) findViewById(R.id.telephone_main);
-
-        mRingtone = (TextView) findViewById(R.id.ringtone_main);
-        mChangeRingtone = (Button) findViewById(R.id.change_ringtone_main);
-        mSetRingtones = (Button) findViewById(R.id.set_ringtones_main);
-        mProgressBarUploadRingtone = (ProgressBar) findViewById(R.id.progressBar_ringtone_upload_mainactivity);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycle_view_activity_main);
 
         if(viewer==null){
             viewer = ViewerMain.getInstance(this);

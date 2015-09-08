@@ -3,6 +3,8 @@ package org.kazin.lilt.main.main;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -24,6 +26,7 @@ public class ViewerMain {
     private static MainActivity activity;
     private DialogLogin mDialogLogin;
     private DialogLoginApprove mDialogLoginApprove;
+    private RecyclerView.LayoutManager mRecyclerLayoutManager;
 
 
     public static ViewerMain getInstance(MainActivity activityIn) {
@@ -40,10 +43,15 @@ public class ViewerMain {
     public void onCreate() {
         unshowLoadingRingtone();
         setOnClickListeners();
+        initializeRecyclerView();
         model.onCreate();
     }
 
-
+    private void initializeRecyclerView() {
+        activity.mRecyclerView.setHasFixedSize(true);
+        mRecyclerLayoutManager = new LinearLayoutManager(MainActivity.getMainContext());
+        activity.mRecyclerView.setLayoutManager(mRecyclerLayoutManager);
+    }
 
     //Dialog Login stuff
 
