@@ -49,12 +49,8 @@ public class MainActivity extends AppCompatActivity {
             viewer = ViewerMain.getInstance(this);
         }
 
-        mSetRingtones.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewer.onSetRingtones();
-            }
-        });
+
+
         viewer.onCreate();
     }
 

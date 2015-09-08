@@ -1,5 +1,6 @@
 package org.kazin.lilt.main.main;
 
+import android.view.View;
 import android.widget.Toast;
 
 import org.kazin.lilt.main.login.DialogLogin;
@@ -29,8 +30,11 @@ public class ViewerMain {
     }
 
     public void onCreate() {
+        setOnClickListeners();
         model.onCreate();
     }
+
+
 
     //Dialog Login stuff
 
@@ -78,7 +82,31 @@ public class ViewerMain {
         Toast.makeText(MainActivity.getMainContext(), text, Toast.LENGTH_SHORT);
     }
 
+    private void onChangeRingtone() {
+        model.onSetRingtoneForUser();
+    }
+
     public void onSetRingtones() {
         model.onSetRingtones();
     }
+
+
+    //mics assign methods for activity
+    private void setOnClickListeners(){
+
+        activity.mChangeRingtone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewer.onChangeRingtone();
+            }
+        });
+        activity.mSetRingtones.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewer.onSetRingtones();
+            }
+        });
+    }
+
+
 }

@@ -1,6 +1,7 @@
 package org.kazin.lilt.main.main;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -121,12 +122,19 @@ public class ModelMain {
             @Override
             protected Void doInBackground(Void... params) {
                 List<String> listOfAllContactNumbers = getAllContactsFromPhone();
+                if(listOfAllContactNumbers == null){
+                    return null;
+                }
                 mProgressRingtonesLoading = new ProgressLoadingMan(listOfAllContactNumbers.size());
                 mBackend.getAllRingtones(listOfAllContactNumbers, new GetAllRingtonesCallback(), new GetAllRingtonesProgressCallback(mProgressRingtonesLoading));
                 return null;
             }
         };
         getAllRingtones.execute();
+    }
+
+    public void onSetRingtoneForUser() {
+
     }
 
 
@@ -163,7 +171,7 @@ public class ModelMain {
     public class GetAllRingtonesCallback implements jCallback{
         @Override
         public void success(Object object) {
-            viewer
+            ///TODO
         }
 
         @Override
@@ -209,12 +217,16 @@ public class ModelMain {
         Uri uri  = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(ringtone.getTelephoneNumber()));
         Cursor contactCursor = mContentResolver.query(uri, null, null, null, null);
         while(contactCursor.moveToNext()){
-            contactCursor.get
+            Uri targetContact = (Uri) contactCursor;
+            ContentValues values = new ContentValues();
+            values.put(ContactsContract.Contacts.CUSTOM_RINGTONE,
+                    Uri.fromFile(ringtone.getFileRingtone()).toString());
+            mContentResolver.update(targetContact, values, null, null);
         }
     }
 
     private List<String> getAllContactsFromPhone(){
-        List<String> phoneNumbers;
+        List<String> phoneNumbers = null;
         ContentResolver cr = MainActivity.getActivity().getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
                 null, null, null, null);
@@ -240,9 +252,10 @@ public class ModelMain {
                     pCur.close();
                 }
             }
+            cur.close();
         }
-        cur.close();
-        return null;
+
+        return phoneNumbers;
     }
 
     private String formatNumber(String telephoneNumber){
