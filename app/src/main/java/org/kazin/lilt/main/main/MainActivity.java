@@ -2,12 +2,15 @@ package org.kazin.lilt.main.main;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.makeramen.roundedimageview.RoundedImageView;
@@ -27,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     TextView mRingtone;
     Button mChangeRingtone;
     Button mSetRingtones;
+    ProgressBar mProgressBarUploadRingtone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,11 +48,11 @@ public class MainActivity extends AppCompatActivity {
         mRingtone = (TextView) findViewById(R.id.ringtone_main);
         mChangeRingtone = (Button) findViewById(R.id.change_ringtone_main);
         mSetRingtones = (Button) findViewById(R.id.set_ringtones_main);
+        mProgressBarUploadRingtone = (ProgressBar) findViewById(R.id.progressBar_ringtone_upload_mainactivity);
 
         if(viewer==null){
             viewer = ViewerMain.getInstance(this);
         }
-
 
 
         viewer.onCreate();
@@ -90,5 +94,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static void setMainContext(Context context) {
         MainActivity.mMainContext = context;
+    }
+
+
+    //onActivtyResult
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        viewer.onActivityResult(requestCode, resultCode , data);
     }
 }

@@ -2,6 +2,7 @@ package org.kazin.lilt.main.main;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -15,9 +16,9 @@ import org.kazin.lilt.objects.LiltUser;
 import org.kazin.lilt.objects.jCallback;
 import org.kazin.lilt.objects.jProgressCallback;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -28,7 +29,8 @@ public class ModelMain {
     //DEBUG REMEMBER
     boolean doNotDisplayLoginDialog = true;
 
-
+    //public const
+    public static final int INTENT_REQUEST_PICK_RINGTONE = 1;
 
 
     private static ModelMain model;
@@ -70,7 +72,6 @@ public class ModelMain {
     public void onResume(){
         if(doNotDisplayLoginDialog){
             mUser = new LiltUser("79639268115");
-
         }
         if (!isUserLoggedIn()){
             viewer.showLoginDialog();
@@ -133,12 +134,46 @@ public class ModelMain {
         getAllRingtones.execute();
     }
 
-    public void onSetRingtoneForUser() {
 
+
+    public void onChangeRingtoneForUser() {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/mpeg");
+        Intent chooser = Intent.createChooser(intent,  "Choose ringtone. Must be less than 5 mb");
+        viewer.startActivityForResult(chooser, INTENT_REQUEST_PICK_RINGTONE);
     }
 
 
+    public void onPickRingtoneFile(File ringtone) {
+        if(isUserLoggedIn()){
+            LiltRingtone2 liltRingtone = new LiltRingtone2(ringtone, mUser.getTelephoneNumber());
+            viewer.showLoadingRingtone();
+            mBackend.saveRingTone(mUser.getTelephoneNumber(), liltRingtone, new SaveRingtoneCallback());
+        } else {
+            onResume();
+        }
+    }
+
+
+
     //callbacks
+
+    //setRingtone for user callback
+    private class SaveRingtoneCallback implements jCallback{
+        @Override
+        public void success(Object object) {
+            viewer.unshowLoadingRingtone();
+            onResume();
+        }
+
+        @Override
+        public void fail(String error) {
+            viewer.unshowLoadingRingtone();
+            Log.d("apkapk", "Error uploading ringtone: " + error);
+        }
+    }
+
 
     //getRingtone Callback
     private class GetRingtoneCallback implements jCallback {
@@ -216,12 +251,15 @@ public class ModelMain {
         mContentResolver = MainActivity.getActivity().getContentResolver();
         Uri uri  = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(ringtone.getTelephoneNumber()));
         Cursor contactCursor = mContentResolver.query(uri, null, null, null, null);
-        while(contactCursor.moveToNext()){
-            Uri targetContact = (Uri) contactCursor;
-            ContentValues values = new ContentValues();
-            values.put(ContactsContract.Contacts.CUSTOM_RINGTONE,
+            while(contactCursor.moveToNext()){
+                String id =  contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts._ID));
+                Uri contactUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, id);
+                ContentValues values = new ContentValues(); //targetContact.toString()
+
+                values.put(ContactsContract.Contacts.CUSTOM_RINGTONE,
                     Uri.fromFile(ringtone.getFileRingtone()).toString());
-            mContentResolver.update(targetContact, values, null, null);
+
+                mContentResolver.update(contactUri, values, null, null);
         }
     }
 

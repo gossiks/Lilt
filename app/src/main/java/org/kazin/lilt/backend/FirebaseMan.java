@@ -80,7 +80,7 @@ public class FirebaseMan {
     }
 
     public void getRingtoneTitle(final String phoneNumber, final jCallback callback) {
-        Firebase tempRingtoneRef = mFirebase.child("user").child(phoneNumber).child("ringtone_title");
+        Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber).child("ringtone_title");
 
         tempRingtoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

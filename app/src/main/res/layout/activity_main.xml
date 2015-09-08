@@ -71,5 +71,18 @@
         android:layout_below="@+id/change_ringtone_main"
         android:layout_centerHorizontal="true" />
 
+    <ProgressBar
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar_ringtone_upload_mainactivity"
+        android:layout_below="@+id/avatar"
+        android:layout_alignLeft="@+id/set_ringtones_main"
+        android:layout_alignStart="@+id/set_ringtones_main"
+        android:layout_above="@+id/set_ringtones_main"
+        android:layout_alignRight="@+id/ringtone_main"
+        android:layout_alignEnd="@+id/ringtone_main"
+        android:indeterminate="false" />
+
 
 </RelativeLayout>

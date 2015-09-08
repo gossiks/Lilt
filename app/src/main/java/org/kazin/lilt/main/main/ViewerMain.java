@@ -1,10 +1,18 @@
 package org.kazin.lilt.main.main;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import org.apache.commons.io.FileUtils;
 import org.kazin.lilt.main.login.DialogLogin;
 import org.kazin.lilt.main.login.DialogLoginApprove;
+import org.kazin.lilt.objects.LiltRingtone2;
+
+import java.io.File;
 
 /**
  * Created by Alexey on 30.08.2015.
@@ -30,6 +38,7 @@ public class ViewerMain {
     }
 
     public void onCreate() {
+        unshowLoadingRingtone();
         setOnClickListeners();
         model.onCreate();
     }
@@ -83,7 +92,7 @@ public class ViewerMain {
     }
 
     private void onChangeRingtone() {
-        model.onSetRingtoneForUser();
+        model.onChangeRingtoneForUser();
     }
 
     public void onSetRingtones() {
@@ -106,6 +115,38 @@ public class ViewerMain {
                 viewer.onSetRingtones();
             }
         });
+    }
+
+
+    //startActivityForResult stuff
+    public void startActivityForResult(Intent intent, int intentRequestPickRingtone) {
+        activity.startActivityForResult(intent, intentRequestPickRingtone);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data ){
+        switch (requestCode){
+            case ModelMain.INTENT_REQUEST_PICK_RINGTONE:
+                if(resultCode == Activity.RESULT_OK){
+                    Uri uri = data.getData();
+                    String path = uri.getPath();
+
+                    File ringtone = new File(path);
+                    model.onPickRingtoneFile(ringtone);
+                } else {
+                    Log.d("apkapk", "onActivityResult result code is not RESULT_OK. Result code: "+resultCode);
+                }
+                break;
+        }
+    }
+
+    public void showLoadingRingtone() {
+        activity.mRingtone.setVisibility(View.INVISIBLE);
+        activity.mProgressBarUploadRingtone.setVisibility(View.VISIBLE);
+    }
+
+    public void unshowLoadingRingtone() {
+        activity.mRingtone.setVisibility(View.VISIBLE);
+        activity.mProgressBarUploadRingtone.setVisibility(View.INVISIBLE);
     }
 
 
