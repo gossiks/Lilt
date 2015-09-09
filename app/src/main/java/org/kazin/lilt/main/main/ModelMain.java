@@ -241,8 +241,9 @@ public class ModelMain {
         return mUser != null;
     }
 
-    private void logOff(){
+    public void logOff(){
         mUser = null;
+        onResume();
     }
 
     //phone contact method

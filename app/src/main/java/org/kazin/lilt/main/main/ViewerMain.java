@@ -1,20 +1,24 @@
 package org.kazin.lilt.main.main;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
-import android.support.v7.widget.LinearLayoutManager;
+import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
-import org.apache.commons.io.FileUtils;
 import org.kazin.lilt.main.login.DialogLogin;
 import org.kazin.lilt.main.login.DialogLoginApprove;
-import org.kazin.lilt.objects.LiltRingtone2;
+import org.kazin.lilt.objects.jEvent;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import it.gmariotti.cardslib.library.internal.Card;
 
 /**
  * Created by Alexey on 30.08.2015.
@@ -27,6 +31,13 @@ public class ViewerMain {
     private DialogLogin mDialogLogin;
     private DialogLoginApprove mDialogLoginApprove;
     private RecyclerView.LayoutManager mRecyclerLayoutManager;
+    private jEvent mCardTelephoneEvent;
+    private jEvent mCardRingtoneEvent;
+    private jEvent mCardUpdateAllRingtonesEvent;
+    private CardAdapterMain mCardAdapterMain;
+    private CardAdapterMain.CardTelephone mCardTelephone;
+    private CardAdapterMain.CardRingtone mCardRingtone;
+    private CardAdapterMain.CardUpdateAllRingtones mCardUpdateAllRingtones;
 
 
     public static ViewerMain getInstance(MainActivity activityIn) {
@@ -41,17 +52,48 @@ public class ViewerMain {
     }
 
     public void onCreate() {
-        unshowLoadingRingtone();
-        setOnClickListeners();
-        initializeRecyclerView();
+        initCardAdapter(MainActivity.getMainContext());
         model.onCreate();
     }
 
-    private void initializeRecyclerView() {
-        activity.mRecyclerView.setHasFixedSize(true);
-        mRecyclerLayoutManager = new LinearLayoutManager(MainActivity.getMainContext());
-        activity.mRecyclerView.setLayoutManager(mRecyclerLayoutManager);
+    private void initCardAdapter(Context context){
+        initializeOnClickEvents();
+
+
+        mCardTelephone = new CardAdapterMain.CardTelephone(context, mCardTelephoneEvent);
+        mCardRingtone = new CardAdapterMain.CardRingtone(context, mCardRingtoneEvent);
+        mCardUpdateAllRingtones = new CardAdapterMain.CardUpdateAllRingtones(context, mCardUpdateAllRingtonesEvent);
+        ArrayList<Card> cardArrayList = new ArrayList<>(3);
+        cardArrayList.addAll(Arrays.asList(mCardTelephone, mCardRingtone, mCardUpdateAllRingtones));
+
+        mCardAdapterMain = new CardAdapterMain(context, cardArrayList);
+
+        activity.mCardListView.setAdapter(mCardAdapterMain);
     }
+
+    private void initializeOnClickEvents(){
+        mCardTelephoneEvent = new jEvent() {
+            @Override
+            public void onEvent(Object object) {
+                model.logOff();
+            }
+        };
+
+        mCardRingtoneEvent = new jEvent() {
+            @Override
+            public void onEvent(Object object) {
+                model.onChangeRingtoneForUser();
+            }
+        };
+
+        mCardUpdateAllRingtonesEvent = new jEvent() {
+            @Override
+            public void onEvent(Object object) {
+                model.onSetRingtones();
+            }
+        };
+    }
+
 
     //Dialog Login stuff
 
@@ -75,7 +117,7 @@ public class ViewerMain {
     }
 
     public void setRingtoneTitle(String ringtoneTitle) {
-        activity.mRingtone.setText(ringtoneTitle);
+        mCardRingtone.setText(ringtoneTitle);
     }
 
     public void showError(String error) {
@@ -109,21 +151,7 @@ public class ViewerMain {
 
 
     //mics assign methods for activity
-    private void setOnClickListeners(){
 
-        activity.mChangeRingtone.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewer.onChangeRingtone();
-            }
-        });
-        activity.mSetRingtones.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewer.onSetRingtones();
-            }
-        });
-    }
 
 
     //startActivityForResult stuff
@@ -135,8 +163,13 @@ public class ViewerMain {
         switch (requestCode){
             case ModelMain.INTENT_REQUEST_PICK_RINGTONE:
                 if(resultCode == Activity.RESULT_OK){
-                    Uri uri = data.getData();
-                    String path = uri.getPath();
+                    Uri uri = data.getData(); //TODO to separate method
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+                    Cursor cursor = activity.getContentResolver().query(uri, filePathColumn, null, null, null);
+                    cursor.moveToFirst();
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    String path = cursor.getString(columnIndex);
+                    cursor.close();
 
                     File ringtone = new File(path);
                     model.onPickRingtoneFile(ringtone);
@@ -148,13 +181,12 @@ public class ViewerMain {
     }
 
     public void showLoadingRingtone() {
-        activity.mRingtone.setVisibility(View.INVISIBLE);
-        activity.mProgressBarUploadRingtone.setVisibility(View.VISIBLE);
+        mCardRingtone.setText("    Loading...");
+        mCardRingtone.shimmerStart();
     }
 
     public void unshowLoadingRingtone() {
-        activity.mRingtone.setVisibility(View.VISIBLE);
-        activity.mProgressBarUploadRingtone.setVisibility(View.INVISIBLE);
+        mCardRingtone.shimmerStop();
     }
 
 

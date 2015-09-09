@@ -5,6 +5,4 @@ package org.kazin.lilt.objects;
  */
 public interface jEvent {
     void onEvent(Object object);
-    int getType();
-    void setType(int type);
 }

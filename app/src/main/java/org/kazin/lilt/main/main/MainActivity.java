@@ -1,23 +1,15 @@
 package org.kazin.lilt.main.main;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SwitchCompat;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-
-import com.makeramen.roundedimageview.RoundedImageView;
-import com.romainpiel.shimmer.ShimmerTextView;
 
 import org.kazin.lilt.R;
+
+import it.gmariotti.cardslib.library.view.CardListView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
     static MainActivity mMainActivity;
 
     ViewerMain viewer = null;
-    RecyclerView mRecyclerView;
+    CardListView mCardListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,15 +25,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mMainContext = this;
         mMainActivity = this;
-
         setMainContext(this);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycle_view_activity_main);
+        mCardListView = (CardListView) findViewById(R.id.list_card_main);
 
         if(viewer==null){
             viewer = ViewerMain.getInstance(this);
         }
-
 
         viewer.onCreate();
     }
