@@ -10,6 +10,10 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.devpaul.filepickerlibrary.FilePickerActivity;
+import com.devpaul.filepickerlibrary.enums.FileScopeType;
+import com.devpaul.filepickerlibrary.enums.FileType;
+
 import org.kazin.lilt.main.login.DialogLogin;
 import org.kazin.lilt.main.login.DialogLoginApprove;
 import org.kazin.lilt.objects.jEvent;
@@ -153,17 +157,32 @@ public class ViewerMain {
     //mics assign methods for activity
 
 
+    public void showRingtonePicker(){
+        Intent filePickerIntent = new Intent(activity, FilePickerActivity.class);
+
+        filePickerIntent.putExtra(FilePickerActivity.REQUEST_CODE, FilePickerActivity.REQUEST_FILE);
+        startActivityForResult(filePickerIntent,FilePickerActivity.REQUEST_FILE);
+
+    }
 
     //startActivityForResult stuff
     public void startActivityForResult(Intent intent, int intentRequestPickRingtone) {
         activity.startActivityForResult(intent, intentRequestPickRingtone);
     }
 
+
+
     public void onActivityResult(int requestCode, int resultCode, Intent data ){
         switch (requestCode){
-            case ModelMain.INTENT_REQUEST_PICK_RINGTONE:
+            case FilePickerActivity.REQUEST_FILE:
                 if(resultCode == Activity.RESULT_OK){
-                    Uri uri = data.getData(); //TODO to separate method
+                    String filePath = data.getStringExtra(FilePickerActivity.FILE_EXTRA_DATA_PATH);
+                    if(filePath!=null){
+                        File ringtone = new File(filePath);
+                        model.onPickRingtoneFile(ringtone);
+                    }
+
+                   /* Uri uri = data.getData(); //TODO to separate method
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
                     Cursor cursor = activity.getContentResolver().query(uri, filePathColumn, null, null, null);
                     cursor.moveToFirst();
@@ -172,7 +191,8 @@ public class ViewerMain {
                     cursor.close();
 
                     File ringtone = new File(path);
-                    model.onPickRingtoneFile(ringtone);
+                    model.onPickRingtoneFile(ringtone);*/
+
                 } else {
                     Log.d("apkapk", "onActivityResult result code is not RESULT_OK. Result code: "+resultCode);
                 }

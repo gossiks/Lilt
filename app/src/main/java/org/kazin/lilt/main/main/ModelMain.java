@@ -9,6 +9,8 @@ import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.util.Log;
 
+import com.devpaul.filepickerlibrary.FilePickerActivity;
+
 import org.kazin.lilt.backend.Backend;
 import org.kazin.lilt.managers.ProgressLoadingMan;
 import org.kazin.lilt.objects.LiltRingtone2;
@@ -137,11 +139,13 @@ public class ModelMain {
 
 
     public void onChangeRingtoneForUser() {
-        Intent intent = new Intent();
+        /*Intent intent = new Intent();
         intent.setAction(Intent.ACTION_GET_CONTENT);
         intent.setType("audio/mpeg");
         Intent chooser = Intent.createChooser(intent,  "Choose ringtone. Must be less than 5 mb");
-        viewer.startActivityForResult(chooser, INTENT_REQUEST_PICK_RINGTONE);
+        viewer.startActivityForResult(chooser, INTENT_REQUEST_PICK_RINGTONE);*/
+
+        viewer.showRingtonePicker();
     }
 
 
@@ -226,7 +230,12 @@ public class ModelMain {
         @Override
         public void progress(Object progress) {
             progressManager.addProgress();
-            setContactRingtone((LiltRingtone2) progress);
+            if(progress!=null){
+                setContactRingtone((LiltRingtone2) progress);
+            } else {
+                //eventually blank
+            }
+
         }
 
         @Override
@@ -252,7 +261,8 @@ public class ModelMain {
         mContentResolver = MainActivity.getActivity().getContentResolver();
         Uri uri  = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(ringtone.getTelephoneNumber()));
         Cursor contactCursor = mContentResolver.query(uri, null, null, null, null);
-            while(contactCursor.moveToNext()){
+        //contactCursor.moveToNext();
+           while(contactCursor.moveToNext()){
                 String id =  contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts._ID));
                 Uri contactUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, id);
                 ContentValues values = new ContentValues(); //targetContact.toString()
@@ -286,7 +296,7 @@ public class ModelMain {
                         String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
                                 + formatNumber(phoneNo));
-                        phoneNumbers.add(phoneNo);
+                        phoneNumbers.add(formatNumber(phoneNo));
                     //}
                     pCur.close();
                 }

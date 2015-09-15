@@ -1,10 +1,12 @@
 package org.kazin.lilt.objects;
 
 import android.os.Environment;
+import android.util.Base64;
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
@@ -31,29 +33,41 @@ public class LiltRingtone2 {
     }
 
     private void createFileRingtone(String base64) {
-        /*byte[] decoded = Base64.decode(base64, 0);
-        mFileRingtone = new File(Environment.getExternalStorageDirectory() + "/"+mTelephoneNumber+".mp3");
-        FileOutputStream os = new FileOutputStream(mFileRingtone, true);
-        os.write(decoded);
-        os.close();*/
 
-        mFileRingtone = new File(Environment.getExternalStorageDirectory() + "/"+mTelephoneNumber+".mp3");
+        try {
+            byte[] decoded = Base64.decode(base64, 0);
+            mFileRingtone = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_RINGTONES) + "/"+mTelephoneNumber+".mp3");
+            FileOutputStream os = new FileOutputStream(mFileRingtone, true);
+            os.write(decoded);
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        /*mFileRingtone = new File(Environment.getExternalStorageDirectory() + "/"+mTelephoneNumber+".mp3");
         try {
             FileUtils.writeStringToFile(mFileRingtone, base64);
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     private void createBase64Ringtone(File file)   {
-        //byte[] bytes = FileUtils.readFileToByteArray(file);
-        //mBase64ringtone = Base64.encodeToString(bytes, 0);
-
+        byte[] bytes = new byte[0];
         try {
-            mBase64ringtone = FileUtils.readFileToString(file);
+            bytes = FileUtils.readFileToByteArray(file);
+            mBase64ringtone = Base64.encodeToString(bytes, 0);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+        /*try {
+            mBase64ringtone = FileUtils.readFileToString(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
     }
 
     //misc getters and setters

@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 
+
 android {
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
@@ -24,22 +25,22 @@ android {
     }
 }
 
+
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.android.support:cardview-v7:21.0.0'
     compile 'com.android.support:recyclerview-v7:21.0.+'
-
     //design
     compile 'com.romainpiel.shimmer:library:1.4.0@aar'
     compile 'me.grantland:autofittextview:0.2.+'
     compile 'com.iangclifton.android:floatlabel:1.0.4'
     compile 'com.github.gabrielemariotti.cards:cardslib-core:2.1.0'
-
-
-
     //backend
     compile 'com.firebase:firebase-client-android:2.3.1+'
     compile 'com.squareup.okhttp:okhttp:2.5.0'
-    compile group: 'commons-io', name: 'commons-io', version: '2.0.1'
+    compile 'commons-io:commons-io:2.0.1'
+    //helpers
+    compile 'com.github.developerpaul123.filepickerlibrary:FPlib:1.+'
+
 }

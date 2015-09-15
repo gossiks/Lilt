@@ -66,10 +66,16 @@ public class FirebaseMan {
         tempRingtoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String ringtoneBase64 = (String) dataSnapshot.child("ringtone").getValue();
-                String ringtoneTitle = (String) dataSnapshot.child("ringtone_title").getValue();
-                LiltRingtone2 ringtone = new LiltRingtone2(ringtoneBase64, ringtoneTitle, phoneNumber);
-                callback.success(ringtone);
+                if(dataSnapshot.getValue()!=null){
+                    String ringtoneBase64 = (String) dataSnapshot.child("ringtone").getValue();
+                    String ringtoneTitle = (String) dataSnapshot.child("ringtone_title").getValue();
+                    LiltRingtone2 ringtone = new LiltRingtone2(ringtoneBase64, ringtoneTitle, phoneNumber);
+                    callback.success(ringtone);
+                } else {
+                    callback.success(null);
+                }
+
+
             }
 
             @Override
