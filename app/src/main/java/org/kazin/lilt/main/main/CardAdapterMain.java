@@ -215,4 +215,24 @@ public class CardAdapterMain extends CardArrayAdapter{
         }
 
     }
+
+    public static class CardSettings extends Card{
+        jEvent getAllContacts;
+
+        public CardSettings(Context context) {
+            super(context);
+            init();
+        }
+
+        private void init(){
+            setTitle("Settings");
+            addCardExpand(new CardSettingsExpand(getContext()));
+        }
+
+        private class CardSettingsExpand extends CardExpand{
+            public CardSettingsExpand(Context context) {
+                super(context, R.layout.card_expand_settings);
+            }
+        }
+    }
 }

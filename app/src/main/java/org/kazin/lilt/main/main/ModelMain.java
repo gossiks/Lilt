@@ -79,6 +79,7 @@ public class ModelMain {
             viewer.showLoginDialog();
         }
         else{
+            viewer.setTelephone(mUser.getTelephoneNumber());
             mBackend.getRingtoneTitle(mUser.getTelephoneNumber(), new GetRingtoneCallback());
         }
     }
@@ -139,12 +140,6 @@ public class ModelMain {
 
 
     public void onChangeRingtoneForUser() {
-        /*Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        intent.setType("audio/mpeg");
-        Intent chooser = Intent.createChooser(intent,  "Choose ringtone. Must be less than 5 mb");
-        viewer.startActivityForResult(chooser, INTENT_REQUEST_PICK_RINGTONE);*/
-
         viewer.showRingtonePicker();
     }
 

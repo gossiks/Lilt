@@ -44,13 +44,6 @@ public class LiltRingtone2 {
             e.printStackTrace();
         }
 
-
-        /*mFileRingtone = new File(Environment.getExternalStorageDirectory() + "/"+mTelephoneNumber+".mp3");
-        try {
-            FileUtils.writeStringToFile(mFileRingtone, base64);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
     private void createBase64Ringtone(File file)   {
@@ -61,13 +54,6 @@ public class LiltRingtone2 {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-        /*try {
-            mBase64ringtone = FileUtils.readFileToString(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
     //misc getters and setters

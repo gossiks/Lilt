@@ -120,6 +120,10 @@ public class ViewerMain {
         mDialogLoginApprove.dismiss();
     }
 
+    public void setTelephone(String telephone){
+        mCardTelephone.setTitle(telephone);
+    }
+
     public void setRingtoneTitle(String ringtoneTitle) {
         mCardRingtone.setText(ringtoneTitle);
     }
