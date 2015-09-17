@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:layout_width="match_parent" android:layout_height="wrap_content">
+    <com.romainpiel.shimmer.ShimmerTextView
+        android:id="@+id/shimmer_loading_card_expand_settings"
+        android:text="Loading..."
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        >
 
+    </com.romainpiel.shimmer.ShimmerTextView>
     <ListView
         android:id="@+id/list_contacts_settings_card_setting_expand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/shimmer_loading_card_expand_settings"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 </RelativeLayout>

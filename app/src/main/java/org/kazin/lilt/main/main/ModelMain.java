@@ -2,8 +2,11 @@ package org.kazin.lilt.main.main;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
@@ -13,6 +16,7 @@ import com.devpaul.filepickerlibrary.FilePickerActivity;
 
 import org.kazin.lilt.backend.Backend;
 import org.kazin.lilt.managers.ProgressLoadingMan;
+import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.LiltUser;
 import org.kazin.lilt.objects.jCallback;
@@ -44,11 +48,11 @@ public class ModelMain {
 
     //user stuff
     private LiltUser mUser;
-    private LiltRingtone2 mRingtone = null;
 
     //count stuff
     private ProgressLoadingMan mProgressRingtonesLoading;
     private ContentResolver mContentResolver;
+    private DBHelper mDatabaseHelper;
 
     public ModelMain(ViewerMain viewer) {
         this.viewer = viewer;
@@ -154,6 +158,31 @@ public class ModelMain {
         }
     }
 
+    //for Settings Card
+
+    public void onGetAllContactsForSettings() {
+        AsyncTask<Void,Void,Void> getAllContactsForSettings = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                viewer.setListOfContactsInSettings(getAllContactsForSettingsFromPhone());
+                return null;
+            }
+        };
+        getAllContactsForSettings.execute();
+    }
+
+    public void onChangeSyncContact(ContactForSettings contact) { //TODO databse to field
+        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+        /*db.query("contacts", new String[]{"telephone", "sync"}
+                , "telephone = "+contact.getTelephone(), null,null,null,null);*/
+
+        ContentValues contactToDataBase = new ContentValues();
+        contactToDataBase.put("telephone", contact.getTelephone());
+        contactToDataBase.put("sync", contact.getSync());
+        contactToDataBase.put("name", contact.getName());
+
+        db.insert("contacts", null, contactToDataBase);
+    }
 
 
     //callbacks
@@ -300,6 +329,73 @@ public class ModelMain {
         }
 
         return phoneNumbers;
+    }
+
+    //TODO repeat code alert
+
+    private List<ContactForSettings> getAllContactsForSettingsFromPhone(){
+        //database init
+        mDatabaseHelper = new DBHelper(viewer.getMainActivityContext(), "contacts", 1);
+        SQLiteDatabase database = mDatabaseHelper.getWritableDatabase();
+        Cursor databaseCursor = null;
+
+        List<ContactForSettings> phoneNumbers = null;
+        ContentResolver cr = MainActivity.getActivity().getContentResolver();
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                null, null, null, null);
+        if (cur.getCount() > 0) {
+            phoneNumbers = new ArrayList<>(cur.getCount());
+            while (cur.moveToNext()) {
+                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY));
+                if (Integer.parseInt(cur.getString(
+                        cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                    Cursor pCur = cr.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            new String[]{id}, null);
+                    //while (pCur.moveToNext()) { //this is for all phones
+                    pCur.moveToLast(); //hope this is the main number
+                    String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
+                            + formatNumber(phoneNo));
+                    databaseCursor = database.query("contacts", new String[]{"telephone", "sync"}
+                            , "telephone = "+formatNumber(phoneNo), null,null,null,null);
+                    boolean syncContact = true;
+                    if(databaseCursor.moveToFirst()){
+                        syncContact = databaseCursor.getInt(databaseCursor.getColumnIndex("sync"))!=0;
+                    }
+                    phoneNumbers.add(new ContactForSettings(name, formatNumber(phoneNo), syncContact));
+                    //}
+                    pCur.close();
+                }
+            }
+            cur.close();
+        }
+
+        return phoneNumbers;
+    }
+
+    //Database helper
+    private class DBHelper extends SQLiteOpenHelper{
+
+        public DBHelper(Context context, String name, int version) {
+            super(context, name, null,version);
+        }
+
+        @Override
+        public void onCreate(SQLiteDatabase db) {
+            db.execSQL("create table contacts ("
+                    + "id integer primary key autoincrement,"
+                    + "name text,"
+                    + "telephone text,"+"sync integer" + ");");
+        }
+
+        @Override
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+        }
     }
 
     private String formatNumber(String telephoneNumber){

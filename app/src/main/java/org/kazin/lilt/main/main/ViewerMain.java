@@ -16,11 +16,13 @@ import com.devpaul.filepickerlibrary.enums.FileType;
 
 import org.kazin.lilt.main.login.DialogLogin;
 import org.kazin.lilt.main.login.DialogLoginApprove;
+import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.jEvent;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import it.gmariotti.cardslib.library.internal.Card;
 
@@ -42,6 +44,9 @@ public class ViewerMain {
     private CardAdapterMain.CardTelephone mCardTelephone;
     private CardAdapterMain.CardRingtone mCardRingtone;
     private CardAdapterMain.CardUpdateAllRingtones mCardUpdateAllRingtones;
+    private jEvent mCardSettingsOnChangeSyncEvent;
+    private jEvent mCardSettingsGetAllContactsForSettingsEvent;
+    private CardAdapterMain.CardSettings mCardSettings;
 
 
     public static ViewerMain getInstance(MainActivity activityIn) {
@@ -67,8 +72,9 @@ public class ViewerMain {
         mCardTelephone = new CardAdapterMain.CardTelephone(context, mCardTelephoneEvent);
         mCardRingtone = new CardAdapterMain.CardRingtone(context, mCardRingtoneEvent);
         mCardUpdateAllRingtones = new CardAdapterMain.CardUpdateAllRingtones(context, mCardUpdateAllRingtonesEvent);
-        ArrayList<Card> cardArrayList = new ArrayList<>(3);
-        cardArrayList.addAll(Arrays.asList(mCardTelephone, mCardRingtone, mCardUpdateAllRingtones));
+        mCardSettings = new CardAdapterMain.CardSettings(context, mCardSettingsOnChangeSyncEvent, mCardSettingsGetAllContactsForSettingsEvent);
+        ArrayList<Card> cardArrayList = new ArrayList<>(4);
+        cardArrayList.addAll(Arrays.asList(mCardTelephone, mCardRingtone, mCardUpdateAllRingtones,mCardSettings));
 
         mCardAdapterMain = new CardAdapterMain(context, cardArrayList);
 
@@ -94,6 +100,20 @@ public class ViewerMain {
             @Override
             public void onEvent(Object object) {
                 model.onSetRingtones();
+            }
+        };
+
+        mCardSettingsOnChangeSyncEvent = new jEvent() {
+            @Override
+            public void onEvent(Object object) {
+                model.onChangeSyncContact((ContactForSettings) object);
+            }
+        };
+
+        mCardSettingsGetAllContactsForSettingsEvent = new jEvent() {
+            @Override
+            public void onEvent(Object object) {
+                model.onGetAllContactsForSettings();
             }
         };
     }
@@ -213,5 +233,12 @@ public class ViewerMain {
         mCardRingtone.shimmerStop();
     }
 
+    public void setListOfContactsInSettings(List<ContactForSettings> contacts){
+        mCardSettings.setContactList(contacts);
+    }
 
+    //misc
+    public Context getMainActivityContext(){
+        return activity.getApplicationContext();
+    }
 }

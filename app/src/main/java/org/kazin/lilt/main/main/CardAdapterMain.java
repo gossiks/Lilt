@@ -2,14 +2,17 @@ package org.kazin.lilt.main.main;
 
 import android.content.Context;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
 
 import com.romainpiel.shimmer.Shimmer;
 import com.romainpiel.shimmer.ShimmerTextView;
 
 import org.kazin.lilt.R;
+import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.jEvent;
 
 import java.util.List;
@@ -28,6 +31,7 @@ public class CardAdapterMain extends CardArrayAdapter{
     public static int CARD_TYPE_TELEPHONE = 0;
     public static int CARD_TYPE_RINGTONE = 1;
     public static int CARD_TYPE_UPDATE_RINGTONES = 2;
+    public static int CARD_TYPE_SETTINGS = 3;
 
     public CardAdapterMain(Context context, List<Card> cards) {
         super(context, cards);
@@ -35,7 +39,7 @@ public class CardAdapterMain extends CardArrayAdapter{
 
     @Override
     public int getViewTypeCount() {
-        return 3; //number of CARD_TYPE static int in the beginning of file
+        return 4; //number of CARD_TYPE static int in the beginning of file
     }
 
 
@@ -217,22 +221,86 @@ public class CardAdapterMain extends CardArrayAdapter{
     }
 
     public static class CardSettings extends Card{
-        jEvent getAllContacts;
+        jEvent onChangeSyncContactEvent;
+        jEvent getAllContactsEvent;
+        CardSettingsExpand cardSettingsExpand;
 
-        public CardSettings(Context context) {
+        public CardSettings(Context context, jEvent onChangeSyncContact, jEvent getAllContacts) {
             super(context);
+            onChangeSyncContactEvent = onChangeSyncContact;
+            getAllContactsEvent = getAllContacts;
             init();
         }
 
         private void init(){
             setTitle("Settings");
-            addCardExpand(new CardSettingsExpand(getContext()));
+            cardSettingsExpand = new CardSettingsExpand(getContext(),onChangeSyncContactEvent);
+            addCardExpand(cardSettingsExpand);
+            setOnExpandAnimatorStartListener(new OnExpandAnimatorStartListener() {
+                @Override
+                public void onExpandStart(Card card) {
+                    getAllContactsEvent.onEvent(null);
+                }
+            });
+        }
+
+        @Override
+        public int getType() {
+            return CARD_TYPE_SETTINGS;
+        }
+
+        @Override
+        public void setupInnerViewElements(ViewGroup parent, View view) {
+            super.setupInnerViewElements(parent, view);
+            setViewToClickToExpand(ViewToClickToExpand.builder().setupView(parent));
+        }
+
+        public void setContactList(List<ContactForSettings> list){
+            cardSettingsExpand.setListContacts(list);
         }
 
         private class CardSettingsExpand extends CardExpand{
-            public CardSettingsExpand(Context context) {
+            ShimmerTextView shimmerTextView;
+            ListView listViewContacts;
+            jEvent onChangeSyncContactEvent;
+            private Shimmer animator;
+
+            public CardSettingsExpand(Context context, jEvent onChangeSyncContact) {
                 super(context, R.layout.card_expand_settings);
+                onChangeSyncContactEvent = onChangeSyncContact;
+            }
+
+            @Override
+            public void setupInnerViewElements(ViewGroup parent, View view) {
+                shimmerTextView = (ShimmerTextView) view.findViewById(R.id.shimmer_loading_card_expand_settings);
+                listViewContacts = (ListView) view.findViewById(R.id.list_contacts_settings_card_setting_expand);
+                Log.d("apkapk","View getContext: "+ view.getContext()+" Just getContext: "+getContext());
+                animator = new Shimmer();
+                animator.setDuration(3000);
+                onExpanded();
+            }
+
+            private void onExpanded(){
+                animator.start(shimmerTextView);
+                listViewContacts.setVisibility(View.GONE);
+            }
+
+            //methods for data upload
+
+            public void setListContacts(final List<ContactForSettings> list){
+                MainActivity.getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        listViewContacts.setAdapter(new SettingsContactsAdapter(getContext(), list, onChangeSyncContactEvent));
+
+                        listViewContacts.setVisibility(View.VISIBLE);
+                        shimmerTextView.setVisibility(View.GONE);
+                    }
+                });
+
             }
         }
+
+
     }
 }
