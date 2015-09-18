@@ -9,7 +9,7 @@
         >
 
     </com.romainpiel.shimmer.ShimmerTextView>
-    <ListView
+    <org.kazin.lilt.misc.ExpandableHeightListView
         android:id="@+id/list_contacts_settings_card_setting_expand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

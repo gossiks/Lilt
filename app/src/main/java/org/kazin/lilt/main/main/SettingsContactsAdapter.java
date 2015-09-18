@@ -1,7 +1,6 @@
 package org.kazin.lilt.main.main;
 
 import android.content.Context;
-import android.support.v7.widget.SwitchCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,6 @@ import android.widget.TextView;
 import org.kazin.lilt.R;
 import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.jEvent;
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -66,20 +64,32 @@ public class SettingsContactsAdapter extends BaseAdapter {
             holder = (ViewHolder)view.getTag();
         }
 
-        final ContactForSettings contactForSettings = getItem(position);
+        ContactForSettings contactForSettings = getItem(position);
 
         holder.name.setText(contactForSettings.getName());
         holder.telephone.setText(contactForSettings.getTelephone());
-        holder.syncSwitch.setChecked(contactForSettings.getSync());
-        holder.syncSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                contactForSettings.setSync(isChecked);
-                mChangeSyncContact.onEvent(contactForSettings);
-            }
-        });
+
+        boolean sync = contactForSettings.getSync();
+        holder.syncSwitch.setChecked(sync);
+        holder.syncSwitch.setOnCheckedChangeListener(new OnSwitchSyncListener(contactForSettings));
 
         return view;
+    }
+
+    private class OnSwitchSyncListener implements CompoundButton.OnCheckedChangeListener{
+
+        private ContactForSettings contact;
+
+        public OnSwitchSyncListener(ContactForSettings contactForSettings) {
+            contact = contactForSettings;
+        }
+
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            ContactForSettings contactForSettings = new ContactForSettings(
+                    contact.getName(), contact.getTelephone(), isChecked);
+            mChangeSyncContact.onEvent(contactForSettings);
+        }
     }
 
 

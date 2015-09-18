@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Switch;
 
 import com.romainpiel.shimmer.Shimmer;
 import com.romainpiel.shimmer.ShimmerTextView;
@@ -236,9 +237,9 @@ public class CardAdapterMain extends CardArrayAdapter{
             setTitle("Settings");
             cardSettingsExpand = new CardSettingsExpand(getContext(),onChangeSyncContactEvent);
             addCardExpand(cardSettingsExpand);
-            setOnExpandAnimatorStartListener(new OnExpandAnimatorStartListener() {
+            setOnExpandAnimatorEndListener(new OnExpandAnimatorEndListener() {
                 @Override
-                public void onExpandStart(Card card) {
+                public void onExpandEnd(Card card) {
                     getAllContactsEvent.onEvent(null);
                 }
             });
@@ -274,6 +275,7 @@ public class CardAdapterMain extends CardArrayAdapter{
             public void setupInnerViewElements(ViewGroup parent, View view) {
                 shimmerTextView = (ShimmerTextView) view.findViewById(R.id.shimmer_loading_card_expand_settings);
                 listViewContacts = (ListView) view.findViewById(R.id.list_contacts_settings_card_setting_expand);
+
                 Log.d("apkapk","View getContext: "+ view.getContext()+" Just getContext: "+getContext());
                 animator = new Shimmer();
                 animator.setDuration(3000);
@@ -282,7 +284,7 @@ public class CardAdapterMain extends CardArrayAdapter{
 
             private void onExpanded(){
                 animator.start(shimmerTextView);
-                listViewContacts.setVisibility(View.GONE);
+                //listViewContacts.setVisibility(View.GONE);
             }
 
             //methods for data upload

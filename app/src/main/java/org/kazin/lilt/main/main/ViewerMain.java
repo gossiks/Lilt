@@ -241,4 +241,8 @@ public class ViewerMain {
     public Context getMainActivityContext(){
         return activity.getApplicationContext();
     }
+
+    public void onPause() {
+        model.onPause();
+    }
 }

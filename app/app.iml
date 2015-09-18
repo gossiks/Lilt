@@ -113,8 +113,8 @@
     <orderEntry type="library" exported="" name="floatlabel-1.0.4" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-22.2.0" level="project" />
     <orderEntry type="library" exported="" name="jackson-databind-2.2.2" level="project" />
-    <orderEntry type="library" exported="" name="commons-io-2.0.1" level="project" />
     <orderEntry type="library" exported="" name="tubesock-0.0.11" level="project" />
+    <orderEntry type="library" exported="" name="commons-io-2.0.1" level="project" />
     <orderEntry type="library" exported="" name="cardslib-core-2.1.0" level="project" />
     <orderEntry type="library" exported="" name="materialfabmenu-1.4" level="project" />
     <orderEntry type="library" exported="" name="FPlib-1.4" level="project" />

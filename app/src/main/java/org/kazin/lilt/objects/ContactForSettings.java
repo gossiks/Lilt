@@ -8,10 +8,10 @@ public class ContactForSettings {
     String telephone;
     boolean sync;
 
-    public ContactForSettings(String name, String telephone, boolean doNotSync) {
+    public ContactForSettings(String name, String telephone, boolean sync) {
         this.name = name;
         this.telephone = telephone;
-        this.sync = doNotSync;
+        this.sync = sync;
     }
 
     public String getName() {

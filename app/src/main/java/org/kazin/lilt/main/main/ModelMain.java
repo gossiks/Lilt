@@ -88,6 +88,10 @@ public class ModelMain {
         }
     }
 
+    public void onPause(){
+        mDatabaseHelper.close();
+    }
+
     //Dialog Login handling
     public void onDialogLoginEnterTel(String text) {
         if(text.length()==0){
@@ -177,11 +181,18 @@ public class ModelMain {
                 , "telephone = "+contact.getTelephone(), null,null,null,null);*/
 
         ContentValues contactToDataBase = new ContentValues();
-        contactToDataBase.put("telephone", contact.getTelephone());
-        contactToDataBase.put("sync", contact.getSync());
-        contactToDataBase.put("name", contact.getName());
+        contactToDataBase.put("telephone", "sds");
+        //contactToDataBase.put("sync", (contact.getSync() ? 1 : 0));
+        contactToDataBase.put("sync", 1);
+        contactToDataBase.put("name", "Sfa");
 
         db.insert("contacts", null, contactToDataBase);
+        Cursor c = db.query("contacts",null,null,null,null,null,null);
+        while(c.moveToNext()){
+            Log.d("apkapk", "Database after pnChangeSync: "+c.getString(1) +" "+ c.getString(2)+" "+c.getString(3));
+        }
+
+        db.close();
     }
 
 
@@ -364,7 +375,16 @@ public class ModelMain {
                             , "telephone = "+formatNumber(phoneNo), null,null,null,null);
                     boolean syncContact = true;
                     if(databaseCursor.moveToFirst()){
-                        syncContact = databaseCursor.getInt(databaseCursor.getColumnIndex("sync"))!=0;
+                        int i =  databaseCursor.getInt(databaseCursor.getColumnIndex("sync"));
+                        switch (i){
+                            case 0:
+                                syncContact = false;
+                                break;
+                            case 1:
+                                syncContact = true;
+                                break;
+                        }
+
                     }
                     phoneNumbers.add(new ContactForSettings(name, formatNumber(phoneNo), syncContact));
                     //}
