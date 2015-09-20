@@ -16,6 +16,7 @@ import org.kazin.lilt.R;
 import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.jEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import it.gmariotti.cardslib.library.internal.Card;
@@ -243,6 +244,12 @@ public class CardAdapterMain extends CardArrayAdapter{
                     getAllContactsEvent.onEvent(null);
                 }
             });
+            setOnCollapseAnimatorStartListener(new OnCollapseAnimatorStartListener() {
+                @Override
+                public void onCollapseStart(Card card) {
+                    cardSettingsExpand.setListContacts(new ArrayList<ContactForSettings>());
+                }
+            });
         }
 
         @Override
@@ -294,7 +301,6 @@ public class CardAdapterMain extends CardArrayAdapter{
                     @Override
                     public void run() {
                         listViewContacts.setAdapter(new SettingsContactsAdapter(getContext(), list, onChangeSyncContactEvent));
-
                         listViewContacts.setVisibility(View.VISIBLE);
                         shimmerTextView.setVisibility(View.GONE);
                     }

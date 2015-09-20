@@ -57,6 +57,7 @@ public class ModelMain {
     public ModelMain(ViewerMain viewer) {
         this.viewer = viewer;
         mBackend = new Backend();
+        mDatabaseHelper = new DBHelper(viewer.getMainActivityContext(), "contacts", 1);
     }
 
     public static ModelMain getInstance(ViewerMain viewerIn) {
@@ -177,22 +178,30 @@ public class ModelMain {
 
     public void onChangeSyncContact(ContactForSettings contact) { //TODO databse to field
         SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
-        /*db.query("contacts", new String[]{"telephone", "sync"}
-                , "telephone = "+contact.getTelephone(), null,null,null,null);*/
+        Cursor checkIfAlreadyInDataBase = db.query("contacts", new String[]{"telephone", "sync"}
+                , "telephone = "+contact.getTelephone(), null,null,null,null);
 
         ContentValues contactToDataBase = new ContentValues();
-        contactToDataBase.put("telephone", "sds");
-        //contactToDataBase.put("sync", (contact.getSync() ? 1 : 0));
-        contactToDataBase.put("sync", 1);
-        contactToDataBase.put("name", "Sfa");
+        contactToDataBase.put("telephone", contact.getTelephone());
+        contactToDataBase.put("sync", (contact.getSync() ? 1 : 0));
+        contactToDataBase.put("name", contact.getName());
 
-        db.insert("contacts", null, contactToDataBase);
-        Cursor c = db.query("contacts",null,null,null,null,null,null);
-        while(c.moveToNext()){
-            Log.d("apkapk", "Database after pnChangeSync: "+c.getString(1) +" "+ c.getString(2)+" "+c.getString(3));
+        if(checkIfAlreadyInDataBase.getCount()>0){
+            db.update("contacts",contactToDataBase, "telephone="
+                    +contact.getTelephone(), null);
+
+        } else {
+            db.insert("contacts", null, contactToDataBase);
         }
 
-        db.close();
+        //DEBUG
+        /*Cursor c = db.query("contacts",null,null,null,null,null,null);
+        while(c.moveToNext()){
+            Log.d("apkapk", "Database after pnChangeSync: "+c.getString(1) +" "+ c.getString(2)+" "+c.getString(3));
+        }*/
+        Log.d("apkapk", "Contact sync changed for: "+contact.getName() + " with telephone "+contact.getTelephone()+" Sync is: "+contact.getSync());
+
+        //db.close();
     }
 
 
@@ -309,7 +318,11 @@ public class ModelMain {
         }
     }
 
-    private List<String> getAllContactsFromPhone(){
+    private List<String> getAllContactsFromPhone(){ //TODO redo "exclude contacts" to query-pattern
+        //database init
+        SQLiteDatabase database = mDatabaseHelper.getWritableDatabase();
+        Cursor databaseCursor = null;
+
         List<String> phoneNumbers = null;
         ContentResolver cr = MainActivity.getActivity().getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
@@ -331,7 +344,28 @@ public class ModelMain {
                         String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
                                 + formatNumber(phoneNo));
+
+                        //exclude logic
+                        databaseCursor = database.query("contacts", new String[]{"telephone", "sync"}
+                                , "telephone = "+formatNumber(phoneNo), null,null,null,null);
+                        boolean syncContact = true;
+                        if(databaseCursor.moveToFirst()){
+                            int i =  databaseCursor.getInt(databaseCursor.getColumnIndex("sync"));
+                            switch (i){
+                                case 0:
+                                    syncContact = false;
+                                    break;
+                                case 1:
+                                    syncContact = true;
+                                    break;
+                            }
+
+                        }
+
+                    if(syncContact){
                         phoneNumbers.add(formatNumber(phoneNo));
+                    }
+
                     //}
                     pCur.close();
                 }
@@ -346,7 +380,6 @@ public class ModelMain {
 
     private List<ContactForSettings> getAllContactsForSettingsFromPhone(){
         //database init
-        mDatabaseHelper = new DBHelper(viewer.getMainActivityContext(), "contacts", 1);
         SQLiteDatabase database = mDatabaseHelper.getWritableDatabase();
         Cursor databaseCursor = null;
 

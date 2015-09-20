@@ -239,7 +239,7 @@ public class ViewerMain {
 
     //misc
     public Context getMainActivityContext(){
-        return activity.getApplicationContext();
+        return MainActivity.getMainContext();
     }
 
     public void onPause() {

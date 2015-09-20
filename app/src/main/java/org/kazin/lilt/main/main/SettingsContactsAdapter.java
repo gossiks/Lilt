@@ -20,14 +20,12 @@ import java.util.List;
  */
 public class SettingsContactsAdapter extends BaseAdapter {
 
-    private Context context;
     private List<ContactForSettings> contacts;
     private final LayoutInflater mInflater;
     private jEvent mChangeSyncContact;
 
 
     public SettingsContactsAdapter(Context context, List<ContactForSettings> contacts, jEvent changeSyncContact) {
-        this.context = context;
         this.contacts = contacts;
         mChangeSyncContact = changeSyncContact;
         mInflater = LayoutInflater.from(context);
@@ -64,14 +62,23 @@ public class SettingsContactsAdapter extends BaseAdapter {
             holder = (ViewHolder)view.getTag();
         }
 
-        ContactForSettings contactForSettings = getItem(position);
+       // ContactForSettings contactForSettings = getItem(position);
+        ContactForSettings contactForSettings =contacts.get(position);
 
         holder.name.setText(contactForSettings.getName());
         holder.telephone.setText(contactForSettings.getTelephone());
 
-        boolean sync = contactForSettings.getSync();
-        holder.syncSwitch.setChecked(sync);
         holder.syncSwitch.setOnCheckedChangeListener(new OnSwitchSyncListener(contactForSettings));
+
+
+        holder.syncSwitch = (Switch)view.findViewById(R.id.switch_sync_contact);
+        boolean sync = contactForSettings.getSync();
+        if(sync != holder.syncSwitch.isChecked()&!holder.syncSwitch.hasOnClickListeners()){
+            holder.syncSwitch.setChecked(sync); //for case, when "holder" is reused. This prevents fire of listener without actual user input
+        }
+
+
+
 
         return view;
     }
@@ -81,17 +88,17 @@ public class SettingsContactsAdapter extends BaseAdapter {
         private ContactForSettings contact;
 
         public OnSwitchSyncListener(ContactForSettings contactForSettings) {
+            /*contact = new ContactForSettings(
+                    contactForSettings.getName(), contactForSettings.getTelephone(), false);*/
             contact = contactForSettings;
         }
 
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            ContactForSettings contactForSettings = new ContactForSettings(
-                    contact.getName(), contact.getTelephone(), isChecked);
-            mChangeSyncContact.onEvent(contactForSettings);
+            contact.setSync(isChecked);
+            mChangeSyncContact.onEvent(contact);
         }
     }
-
 
     private class ViewHolder {
         TextView name;
