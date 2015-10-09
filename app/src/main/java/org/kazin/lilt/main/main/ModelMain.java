@@ -3,7 +3,6 @@ package org.kazin.lilt.main.main;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -12,20 +11,27 @@ import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.util.Log;
 
-import com.devpaul.filepickerlibrary.FilePickerActivity;
-
 import org.kazin.lilt.backend.Backend;
+import org.kazin.lilt.backend.CacheContactsSettings;
+import org.kazin.lilt.backend.ContactAA;
 import org.kazin.lilt.managers.ProgressLoadingMan;
 import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.LiltUser;
 import org.kazin.lilt.objects.jCallback;
+import org.kazin.lilt.objects.jCallbackRingtone;
 import org.kazin.lilt.objects.jProgressCallback;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by Alexey on 30.08.2015.
@@ -53,6 +59,8 @@ public class ModelMain {
     private ProgressLoadingMan mProgressRingtonesLoading;
     private ContentResolver mContentResolver;
     private DBHelper mDatabaseHelper;
+    private boolean mInProgressSetAllRingtones;
+    private Observable<LiltRingtone2> mSetAllRingtonesObserver;
 
     public ModelMain(ViewerMain viewer) {
         this.viewer = viewer;
@@ -130,6 +138,52 @@ public class ModelMain {
 
     public void onSetRingtones() {
 
+        final ProgressLoadingMan progressLoadingMan = new ProgressLoadingMan();
+
+        mSetAllRingtonesObserver = Observable.create(new Observable.OnSubscribe<LiltRingtone2>() {
+            @Override
+            public void call(final Subscriber<? super LiltRingtone2> subscriber) {
+
+                mInProgressSetAllRingtones = true;
+                List<String> telephonesOfContacts = getAllContactsFromPhone();
+                progressLoadingMan.setTotalProgressCount(telephonesOfContacts.size());
+
+                for (String tel : telephonesOfContacts) {
+                    mBackend.getRingtone(tel, new jCallbackRingtone() {
+                        @Override
+                        public void onEvent(LiltRingtone2 ringtone) {
+                            setContactRingtone(ringtone);
+                            subscriber.onNext(ringtone);
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            subscriber.onError(new Exception(error));
+                        }
+                    });
+                }
+
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+
+        mSetAllRingtonesObserver.subscribe(new Subscriber<LiltRingtone2>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(LiltRingtone2 ringtone2) {
+
+            }
+        });
+
         AsyncTask<Void, Integer, Void> getAllRingtones = new AsyncTask<Void, Integer, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -156,7 +210,7 @@ public class ModelMain {
         if(isUserLoggedIn()){
             LiltRingtone2 liltRingtone = new LiltRingtone2(ringtone, mUser.getTelephoneNumber());
             viewer.showLoadingRingtone();
-            mBackend.saveRingTone(mUser.getTelephoneNumber(), liltRingtone, new SaveRingtoneCallback());
+            mBackend.setRingtone(mUser.getTelephoneNumber(), liltRingtone, new SaveRingtoneCallback());
         } else {
             onResume();
         }
@@ -175,26 +229,10 @@ public class ModelMain {
         getAllContactsForSettings.execute();
     }
 
-    public void onChangeSyncContact(ContactForSettings contact) { //TODO databse to field
-        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
-        /*db.query("contacts", new String[]{"telephone", "sync"}
-                , "telephone = "+contact.getTelephone(), null,null,null,null);*/
-
-        ContentValues contactToDataBase = new ContentValues();
-        contactToDataBase.put("telephone", "sds");
-        //contactToDataBase.put("sync", (contact.getSync() ? 1 : 0));
-        contactToDataBase.put("sync", 1);
-        contactToDataBase.put("name", "Sfa");
-
-        db.insert("contacts", null, contactToDataBase);
-        Cursor c = db.query("contacts",null,null,null,null,null,null);
-        while(c.moveToNext()){
-            Log.d("apkapk", "Database after pnChangeSync: "+c.getString(1) +" "+ c.getString(2)+" "+c.getString(3));
-        }
-
-        db.close();
+    public void onChangeSyncContact(ContactForSettings contact) { //TODO replace ContactForSettings to ContactAA
+        CacheContactsSettings.contactSyncChanged(
+                new ContactAA(contact.getTelephone(), contact.getSync(),contact.getName()));
     }
-
 
     //callbacks
 
@@ -345,11 +383,6 @@ public class ModelMain {
     //TODO repeat code alert
 
     private List<ContactForSettings> getAllContactsForSettingsFromPhone(){
-        //database init
-        mDatabaseHelper = new DBHelper(viewer.getMainActivityContext(), "contacts", 1);
-        SQLiteDatabase database = mDatabaseHelper.getWritableDatabase();
-        Cursor databaseCursor = null;
-
         List<ContactForSettings> phoneNumbers = null;
         ContentResolver cr = MainActivity.getActivity().getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
@@ -371,22 +404,9 @@ public class ModelMain {
                     String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                     Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
                             + formatNumber(phoneNo));
-                    databaseCursor = database.query("contacts", new String[]{"telephone", "sync"}
-                            , "telephone = "+formatNumber(phoneNo), null,null,null,null);
-                    boolean syncContact = true;
-                    if(databaseCursor.moveToFirst()){
-                        int i =  databaseCursor.getInt(databaseCursor.getColumnIndex("sync"));
-                        switch (i){
-                            case 0:
-                                syncContact = false;
-                                break;
-                            case 1:
-                                syncContact = true;
-                                break;
-                        }
 
-                    }
-                    phoneNumbers.add(new ContactForSettings(name, formatNumber(phoneNo), syncContact));
+                    phoneNumbers.add(new ContactForSettings(name, formatNumber(phoneNo)
+                            , CacheContactsSettings.getContactsSyncData(formatNumber(phoneNo))));
                     //}
                     pCur.close();
                 }

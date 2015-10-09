@@ -17,6 +17,7 @@ public class LiltRingtone2 {
     private File mFileRingtone;
     private String mTelephoneNumber;
     private String mTitle;
+    private String error = null;
 
     public LiltRingtone2(String base64Ringtone, String title, String telephoneNumber) {
         mBase64ringtone = base64Ringtone;
@@ -30,6 +31,10 @@ public class LiltRingtone2 {
         mTitle = fileRingtone.getName();
         mTelephoneNumber = telephoneNumber;
         createBase64Ringtone(mFileRingtone);
+    }
+
+    public LiltRingtone2(String error){
+        this.error = error;
     }
 
     private void createFileRingtone(String base64) {
@@ -73,6 +78,14 @@ public class LiltRingtone2 {
 
     public String getTitle() {
         return mTitle;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }
 

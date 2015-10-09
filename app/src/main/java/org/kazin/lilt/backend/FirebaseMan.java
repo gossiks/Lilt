@@ -10,10 +10,14 @@ import com.firebase.client.ValueEventListener;
 import org.kazin.lilt.main.main.ModelMain;
 import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.jCallback;
+import org.kazin.lilt.objects.jCallbackRingtone;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import rx.Observable;
+import rx.Subscriber;
 
 /**
  * Created by Alexey on 31.08.2015.
@@ -41,7 +45,7 @@ public class FirebaseMan {
         mFirebase = new Firebase("https://lilt.firebaseio.com/");
     }
 
-    public void saveRingtone(final String phoneNumber, final LiltRingtone2 ringtone, final jCallback callback) {
+    public void setRingtone(final String phoneNumber, final LiltRingtone2 ringtone, final jCallback callback) {
         final Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber);
 
         Map<String, Object> ringtoneSet = new HashMap<>();
@@ -61,18 +65,18 @@ public class FirebaseMan {
 
 
 
-    public void getRingtone(final String phoneNumber, final jCallback callback){
+    public void getRingtone(final String phoneNumber, final jCallbackRingtone callback){
         Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber);
         tempRingtoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue()!=null){
+                if (dataSnapshot.getValue() != null) {
                     String ringtoneBase64 = (String) dataSnapshot.child("ringtone").getValue();
                     String ringtoneTitle = (String) dataSnapshot.child("ringtone_title").getValue();
                     LiltRingtone2 ringtone = new LiltRingtone2(ringtoneBase64, ringtoneTitle, phoneNumber);
-                    callback.success(ringtone);
+                    callback.onEvent(ringtone);
                 } else {
-                    callback.success(null);
+                    callback.onError("Ringtone doesn't exists in database");
                 }
 
 
@@ -80,10 +84,12 @@ public class FirebaseMan {
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
-                callback.fail(firebaseError.toString());
+                callback.onError(firebaseError.toString());
             }
         });
     }
+
+
 
     public void getRingtoneTitle(final String phoneNumber, final jCallback callback) {
         Firebase tempRingtoneRef = mFirebase.child("ring").child(phoneNumber).child("ringtone_title");
@@ -91,7 +97,7 @@ public class FirebaseMan {
         tempRingtoneRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue()==null){
+                if (dataSnapshot.getValue() == null) {
                     callback.success("Ringtone not defined yet");
                 } else {
                     String ringtoneTitle = (String) dataSnapshot.getValue();
@@ -107,9 +113,21 @@ public class FirebaseMan {
     }
 
     public void getAllRingtones(List<String> listOfAllContactNumbers, ModelMain.GetAllRingtonesCallback getAllRingtonesCallback, ModelMain.GetAllRingtonesProgressCallback getAllRingtonesProgressCallback) {
-        for(String number : listOfAllContactNumbers){
+        //TODO DEPRECATE
+        /*(String number : listOfAllContactNumbers){
             getRingtone(number, new GetSingleRingtoneCallback(getAllRingtonesProgressCallback));
-        }
+        }*/
+    }
+
+    public Observable<LiltRingtone2> getAllRingtonesObservable(final List<String> listOfAllContactTelephone) {
+        return Observable.create(new Observable.OnSubscribe<LiltRingtone2>() {
+            @Override
+            public void call(Subscriber<? super LiltRingtone2> subscriber) {
+                for (String tel:listOfAllContactTelephone){
+                    getRingtone();
+                }
+            }
+        });
     }
 
     // private callbacks

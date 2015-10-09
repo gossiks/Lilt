@@ -12,6 +12,10 @@ public class ProgressLoadingMan {
         this.totalProgressCount = totalProgressCount;
     }
 
+    public ProgressLoadingMan(){
+
+    }
+
     public void addProgress(){
         progressCount++;
     }
@@ -26,5 +30,13 @@ public class ProgressLoadingMan {
 
     public String getFinalProgress(){
         return progressCount+"/"+totalProgressCount;
+    }
+
+    public int getTotalProgressCount() {
+        return totalProgressCount;
+    }
+
+    public void setTotalProgressCount(int totalProgressCount) {
+        this.totalProgressCount = totalProgressCount;
     }
 }

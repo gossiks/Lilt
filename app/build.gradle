@@ -40,7 +40,13 @@ dependencies {
     compile 'com.firebase:firebase-client-android:2.3.1+'
     compile 'com.squareup.okhttp:okhttp:2.5.0'
     compile 'commons-io:commons-io:2.0.1'
+    //SQL
+    compile 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
+
     //helpers
     compile 'com.github.developerpaul123.filepickerlibrary:FPlib:1.+'
 
+    //RxJava
+    compile 'io.reactivex:rxjava:1.0.14'
+    compile 'io.reactivex:rxandroid:1.0.1'
 }

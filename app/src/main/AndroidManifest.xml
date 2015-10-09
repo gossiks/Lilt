@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
 
     <application
+        android:name=".misc.LiltApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -23,6 +24,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="AA_DB_NAME"
+            android:value="qiwi.db" />
+        <meta-data
+            android:name="AA_DB_VERSION"
+            android:value="1" />
+        <meta-data
+            android:name="AA_MODELS"
+            android:value="org.kazin.lilt.backend.ContactAA" />
     </application>
 
 </manifest>
