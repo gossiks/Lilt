@@ -63,7 +63,4 @@ public class Backend {
 
     //Rxjava
 
-    public Observable<LiltRingtone2> getAllRingtonesObservable(){
-        return mFirebaseMan.getAllRingtonesObservable();
-    }
 }

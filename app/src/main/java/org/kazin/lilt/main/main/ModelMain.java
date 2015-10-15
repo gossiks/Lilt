@@ -27,10 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import rx.Notification;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -58,7 +61,6 @@ public class ModelMain {
     //count stuff
     private ProgressLoadingMan mProgressRingtonesLoading;
     private ContentResolver mContentResolver;
-    private DBHelper mDatabaseHelper;
     private boolean mInProgressSetAllRingtones;
     private Observable<LiltRingtone2> mSetAllRingtonesObserver;
 
@@ -97,7 +99,7 @@ public class ModelMain {
     }
 
     public void onPause(){
-        mDatabaseHelper.close();
+
     }
 
     //Dialog Login handling
@@ -152,7 +154,6 @@ public class ModelMain {
                     mBackend.getRingtone(tel, new jCallbackRingtone() {
                         @Override
                         public void onEvent(LiltRingtone2 ringtone) {
-                            setContactRingtone(ringtone);
                             subscriber.onNext(ringtone);
                         }
 
@@ -165,38 +166,41 @@ public class ModelMain {
 
                 subscriber.onCompleted();
             }
+        }).onErrorReturn(new Func1<Throwable, LiltRingtone2>() {
+            @Override
+            public LiltRingtone2 call(Throwable throwable) {
+                return new LiltRingtone2(throwable.getMessage());
+            }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 
-        mSetAllRingtonesObserver.subscribe(new Subscriber<LiltRingtone2>() {
+       Subscription setAllRingtonesSubscription =  mSetAllRingtonesObserver.subscribe(new Subscriber<LiltRingtone2>() {
+
             @Override
             public void onCompleted() {
-
+                mInProgressSetAllRingtones = false;
             }
 
             @Override
             public void onError(Throwable e) {
-
+                e.printStackTrace();
             }
 
             @Override
-            public void onNext(LiltRingtone2 ringtone2) {
+            public void onNext(LiltRingtone2 liltRingtone2) {
+                if (liltRingtone2.getError() == null) {
+                    mProgressRingtonesLoading.addError();
+                } else {
+                    try {
+                        setContactRingtone(liltRingtone2);
+                        mProgressRingtonesLoading.addProgress();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        onError(e);
+                    }
+                }
 
             }
         });
-
-        AsyncTask<Void, Integer, Void> getAllRingtones = new AsyncTask<Void, Integer, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                List<String> listOfAllContactNumbers = getAllContactsFromPhone();
-                if(listOfAllContactNumbers == null){
-                    return null;
-                }
-                mProgressRingtonesLoading = new ProgressLoadingMan(listOfAllContactNumbers.size());
-                mBackend.getAllRingtones(listOfAllContactNumbers, new GetAllRingtonesCallback(), new GetAllRingtonesProgressCallback(mProgressRingtonesLoading));
-                return null;
-            }
-        };
-        getAllRingtones.execute();
     }
 
 
@@ -442,8 +446,15 @@ public class ModelMain {
         //String normalizedNumber = PhoneNumberUtils.normalizeNumber(telephoneNumber); this works only in lollipop
         String normalizedNumber = telephoneNumber.replaceAll("[^\\d]", "");
         if (normalizedNumber.startsWith("8") & normalizedNumber.length()==11){ //walkaround for russian 8 instead of +7
-            normalizedNumber = 7+normalizedNumber.substring(1);
+            normalizedNumber = "+"+7+normalizedNumber.substring(1);
         }
         return normalizedNumber;
+    }
+
+    private String getRusFormattedNumber(String telephoneNumber){
+        if(telephoneNumber.length()==12 && telephoneNumber.startsWith("+")){
+            return telephoneNumber.replace("+7","8");
+        }
+        return telephoneNumber;
     }
 }

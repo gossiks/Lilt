@@ -119,16 +119,6 @@ public class FirebaseMan {
         }*/
     }
 
-    public Observable<LiltRingtone2> getAllRingtonesObservable(final List<String> listOfAllContactTelephone) {
-        return Observable.create(new Observable.OnSubscribe<LiltRingtone2>() {
-            @Override
-            public void call(Subscriber<? super LiltRingtone2> subscriber) {
-                for (String tel:listOfAllContactTelephone){
-                    getRingtone();
-                }
-            }
-        });
-    }
 
     // private callbacks
     private class GetSingleRingtoneCallback implements jCallback{
