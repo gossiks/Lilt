@@ -49,7 +49,7 @@ public class ContactAA extends Model {
         this.telephone = telephone;
     }
 
-    public boolean isSync() {
+    public boolean getSync() {
         return sync;
     }
 

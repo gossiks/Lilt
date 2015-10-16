@@ -3,6 +3,7 @@ package org.kazin.lilt.main.main;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -14,6 +15,7 @@ import android.util.Log;
 import org.kazin.lilt.backend.Backend;
 import org.kazin.lilt.backend.CacheContactsSettings;
 import org.kazin.lilt.backend.ContactAA;
+import org.kazin.lilt.main.settings.TelephoneSettingsActivity;
 import org.kazin.lilt.managers.ProgressLoadingMan;
 import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.LiltRingtone2;
@@ -220,22 +222,9 @@ public class ModelMain {
         }
     }
 
-    //for Settings Card
-
-    public void onGetAllContactsForSettings() {
-        AsyncTask<Void,Void,Void> getAllContactsForSettings = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                viewer.setListOfContactsInSettings(getAllContactsForSettingsFromPhone());
-                return null;
-            }
-        };
-        getAllContactsForSettings.execute();
-    }
-
-    public void onChangeSyncContact(ContactForSettings contact) { //TODO replace ContactForSettings to ContactAA
-        CacheContactsSettings.contactSyncChanged(
-                new ContactAA(contact.getTelephone(), contact.getSync(),contact.getName()));
+    public void onNavigateToSettings() {
+        Intent intent = new Intent(viewer.getMainActivity(), TelephoneSettingsActivity.class);
+        viewer.getMainActivity().startActivity(intent);
     }
 
     //callbacks
@@ -386,61 +375,7 @@ public class ModelMain {
 
     //TODO repeat code alert
 
-    private List<ContactForSettings> getAllContactsForSettingsFromPhone(){
-        List<ContactForSettings> phoneNumbers = null;
-        ContentResolver cr = MainActivity.getActivity().getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-                null, null, null, null);
-        if (cur.getCount() > 0) {
-            phoneNumbers = new ArrayList<>(cur.getCount());
-            while (cur.moveToNext()) {
-                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY));
-                if (Integer.parseInt(cur.getString(
-                        cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                    Cursor pCur = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            new String[]{id}, null);
-                    //while (pCur.moveToNext()) { //this is for all phones
-                    pCur.moveToLast(); //hope this is the main number
-                    String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
-                            + formatNumber(phoneNo));
 
-                    phoneNumbers.add(new ContactForSettings(name, formatNumber(phoneNo)
-                            , CacheContactsSettings.getContactsSyncData(formatNumber(phoneNo))));
-                    //}
-                    pCur.close();
-                }
-            }
-            cur.close();
-        }
-
-        return phoneNumbers;
-    }
-
-    //Database helper
-    private class DBHelper extends SQLiteOpenHelper{
-
-        public DBHelper(Context context, String name, int version) {
-            super(context, name, null,version);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            db.execSQL("create table contacts ("
-                    + "id integer primary key autoincrement,"
-                    + "name text,"
-                    + "telephone text,"+"sync integer" + ");");
-        }
-
-        @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-        }
-    }
 
     private String formatNumber(String telephoneNumber){
         //String normalizedNumber = PhoneNumberUtils.normalizeNumber(telephoneNumber); this works only in lollipop

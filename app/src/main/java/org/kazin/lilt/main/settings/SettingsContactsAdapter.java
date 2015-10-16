@@ -1,4 +1,4 @@
-package org.kazin.lilt.main.main;
+package org.kazin.lilt.main.settings;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,9 +10,12 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import org.kazin.lilt.R;
+import org.kazin.lilt.backend.ContactAA;
 import org.kazin.lilt.objects.ContactForSettings;
+import org.kazin.lilt.objects.SyncStateListener;
 import org.kazin.lilt.objects.jEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,15 +24,24 @@ import java.util.List;
 public class SettingsContactsAdapter extends BaseAdapter {
 
     private Context context;
-    private List<ContactForSettings> contacts;
+    private List<ContactAA> contacts;
     private final LayoutInflater mInflater;
     private jEvent mChangeSyncContact;
 
+    private SyncStateListener mSyncStateListener;
 
-    public SettingsContactsAdapter(Context context, List<ContactForSettings> contacts, jEvent changeSyncContact) {
+
+    public SettingsContactsAdapter(Context context, List<ContactAA> contacts, jEvent changeSyncContact) {
         this.context = context;
         this.contacts = contacts;
         mChangeSyncContact = changeSyncContact;
+        mInflater = LayoutInflater.from(context);
+    }
+
+    public SettingsContactsAdapter(Context context, SyncStateListener syncStateListener){
+        this.context = context;
+        mSyncStateListener = syncStateListener;
+        contacts = new ArrayList<>(1);
         mInflater = LayoutInflater.from(context);
     }
 
@@ -39,7 +51,7 @@ public class SettingsContactsAdapter extends BaseAdapter {
     }
 
     @Override
-    public ContactForSettings getItem(int position) {
+    public ContactAA getItem(int position) {
         return contacts.get(position);
     }
 
@@ -64,7 +76,7 @@ public class SettingsContactsAdapter extends BaseAdapter {
             holder = (ViewHolder)view.getTag();
         }
 
-        ContactForSettings contactForSettings = getItem(position);
+        ContactAA contactForSettings = getItem(position);
 
         holder.name.setText(contactForSettings.getName());
         holder.telephone.setText(contactForSettings.getTelephone());
@@ -78,16 +90,16 @@ public class SettingsContactsAdapter extends BaseAdapter {
 
     private class OnSwitchSyncListener implements CompoundButton.OnCheckedChangeListener{
 
-        private ContactForSettings contact;
+        private ContactAA contact;
 
-        public OnSwitchSyncListener(ContactForSettings contactForSettings) {
+        public OnSwitchSyncListener(ContactAA contactForSettings) {
             contact = contactForSettings;
         }
 
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            ContactForSettings contactForSettings = new ContactForSettings(
-                    contact.getName(), contact.getTelephone(), isChecked);
+            ContactAA contactForSettings = new ContactAA(
+                     contact.getTelephone(), isChecked,contact.getName());
             mChangeSyncContact.onEvent(contactForSettings);
         }
     }
@@ -97,5 +109,11 @@ public class SettingsContactsAdapter extends BaseAdapter {
         TextView name;
         TextView telephone;
         Switch syncSwitch;
+    }
+
+    //additional methods
+    public void addContact(ContactAA contact){
+        contacts.add(contact);
+        notifyDataSetChanged();
     }
 }

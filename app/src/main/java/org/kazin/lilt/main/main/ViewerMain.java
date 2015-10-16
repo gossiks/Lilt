@@ -36,7 +36,6 @@ public class ViewerMain {
     private static MainActivity activity;
     private DialogLogin mDialogLogin;
     private DialogLoginApprove mDialogLoginApprove;
-    private RecyclerView.LayoutManager mRecyclerLayoutManager;
     private jEvent mCardTelephoneEvent;
     private jEvent mCardRingtoneEvent;
     private jEvent mCardUpdateAllRingtonesEvent;
@@ -44,9 +43,8 @@ public class ViewerMain {
     private CardAdapterMain.CardTelephone mCardTelephone;
     private CardAdapterMain.CardRingtone mCardRingtone;
     private CardAdapterMain.CardUpdateAllRingtones mCardUpdateAllRingtones;
-    private jEvent mCardSettingsOnChangeSyncEvent;
-    private jEvent mCardSettingsGetAllContactsForSettingsEvent;
     private CardAdapterMain.CardSettings mCardSettings;
+    private jEvent mNavigateToSettings;
 
 
     public static ViewerMain getInstance(MainActivity activityIn) {
@@ -72,7 +70,7 @@ public class ViewerMain {
         mCardTelephone = new CardAdapterMain.CardTelephone(context, mCardTelephoneEvent);
         mCardRingtone = new CardAdapterMain.CardRingtone(context, mCardRingtoneEvent);
         mCardUpdateAllRingtones = new CardAdapterMain.CardUpdateAllRingtones(context, mCardUpdateAllRingtonesEvent);
-        mCardSettings = new CardAdapterMain.CardSettings(context, mCardSettingsOnChangeSyncEvent, mCardSettingsGetAllContactsForSettingsEvent);
+        mCardSettings = new CardAdapterMain.CardSettings(context, mNavigateToSettings);
         ArrayList<Card> cardArrayList = new ArrayList<>(4);
         cardArrayList.addAll(Arrays.asList(mCardTelephone, mCardRingtone, mCardUpdateAllRingtones,mCardSettings));
 
@@ -103,19 +101,13 @@ public class ViewerMain {
             }
         };
 
-        mCardSettingsOnChangeSyncEvent = new jEvent() {
+        mNavigateToSettings = new jEvent() {
             @Override
             public void onEvent(Object object) {
-                model.onChangeSyncContact((ContactForSettings) object);
+                model.onNavigateToSettings();
             }
         };
 
-        mCardSettingsGetAllContactsForSettingsEvent = new jEvent() {
-            @Override
-            public void onEvent(Object object) {
-                model.onGetAllContactsForSettings();
-            }
-        };
     }
 
 
@@ -185,7 +177,7 @@ public class ViewerMain {
         Intent filePickerIntent = new Intent(activity, FilePickerActivity.class);
 
         filePickerIntent.putExtra(FilePickerActivity.REQUEST_CODE, FilePickerActivity.REQUEST_FILE);
-        startActivityForResult(filePickerIntent,FilePickerActivity.REQUEST_FILE);
+        startActivityForResult(filePickerIntent, FilePickerActivity.REQUEST_FILE);
 
     }
 
@@ -233,13 +225,13 @@ public class ViewerMain {
         mCardRingtone.shimmerStop();
     }
 
-    public void setListOfContactsInSettings(List<ContactForSettings> contacts){
-        mCardSettings.setContactList(contacts);
-    }
-
     //misc
     public Context getMainActivityContext(){
         return activity.getApplicationContext();
+    }
+
+    public Activity getMainActivity(){
+        return activity;
     }
 
     public void onPause() {

@@ -28,11 +28,11 @@ public class CacheContactsSettings {
     }
 
     public static boolean getContactsSyncData(String telephone){
-        boolean sync = false;
+        boolean sync = true;
         ContactAA contactAA = new Select().from(ContactAA.class)
                 .where(ContactAA.TELEPHONE_COLUMN_NAME+" = ?", telephone).executeSingle();
         if(contactAA != null){
-            sync = contactAA.isSync();
+            sync = contactAA.getSync();
         }
         return sync;
     }

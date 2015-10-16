@@ -1,18 +1,17 @@
 package org.kazin.lilt.main.main;
 
 import android.content.Context;
-import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Switch;
 
 import com.romainpiel.shimmer.Shimmer;
 import com.romainpiel.shimmer.ShimmerTextView;
 
 import org.kazin.lilt.R;
+import org.kazin.lilt.main.settings.SettingsContactsAdapter;
 import org.kazin.lilt.objects.ContactForSettings;
 import org.kazin.lilt.objects.jEvent;
 
@@ -222,27 +221,19 @@ public class CardAdapterMain extends CardArrayAdapter{
     }
 
     public static class CardSettings extends Card{
-        jEvent onChangeSyncContactEvent;
-        jEvent getAllContactsEvent;
+        jEvent navigateToSettings;
         CardSettingsExpand cardSettingsExpand;
 
-        public CardSettings(Context context, jEvent onChangeSyncContact, jEvent getAllContacts) {
+        public CardSettings(Context context, jEvent navigateToSettings) {
             super(context);
-            onChangeSyncContactEvent = onChangeSyncContact;
-            getAllContactsEvent = getAllContacts;
+            this.navigateToSettings = navigateToSettings;
             init();
         }
 
         private void init(){
             setTitle("Settings");
-            cardSettingsExpand = new CardSettingsExpand(getContext(),onChangeSyncContactEvent);
+            cardSettingsExpand = new CardSettingsExpand(getContext(),navigateToSettings);
             addCardExpand(cardSettingsExpand);
-            setOnExpandAnimatorEndListener(new OnExpandAnimatorEndListener() {
-                @Override
-                public void onExpandEnd(Card card) {
-                    getAllContactsEvent.onEvent(null);
-                }
-            });
         }
 
         @Override
@@ -256,50 +247,24 @@ public class CardAdapterMain extends CardArrayAdapter{
             setViewToClickToExpand(ViewToClickToExpand.builder().setupView(parent));
         }
 
-        public void setContactList(List<ContactForSettings> list){
-            cardSettingsExpand.setListContacts(list);
-        }
-
         private class CardSettingsExpand extends CardExpand{
-            ShimmerTextView shimmerTextView;
-            ListView listViewContacts;
-            jEvent onChangeSyncContactEvent;
-            private Shimmer animator;
+            Button buttonNavigateToSettings;
+            jEvent navigateToSettings;
 
-            public CardSettingsExpand(Context context, jEvent onChangeSyncContact) {
+            public CardSettingsExpand(Context context, jEvent navigateToSettings) {
                 super(context, R.layout.card_expand_settings);
-                onChangeSyncContactEvent = onChangeSyncContact;
+                this.navigateToSettings = navigateToSettings;
             }
 
             @Override
             public void setupInnerViewElements(ViewGroup parent, View view) {
-                shimmerTextView = (ShimmerTextView) view.findViewById(R.id.shimmer_loading_card_expand_settings);
-                listViewContacts = (ListView) view.findViewById(R.id.list_contacts_settings_card_setting_expand);
-
-                Log.d("apkapk","View getContext: "+ view.getContext()+" Just getContext: "+getContext());
-                animator = new Shimmer();
-                animator.setDuration(3000);
-                onExpanded();
-            }
-
-            private void onExpanded(){
-                animator.start(shimmerTextView);
-                //listViewContacts.setVisibility(View.GONE);
-            }
-
-            //methods for data upload
-
-            public void setListContacts(final List<ContactForSettings> list){
-                MainActivity.getActivity().runOnUiThread(new Runnable() {
+                buttonNavigateToSettings = (Button) view.findViewById(R.id.sync_settings_button_expand_settings);
+                buttonNavigateToSettings.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void run() {
-                        listViewContacts.setAdapter(new SettingsContactsAdapter(getContext(), list, onChangeSyncContactEvent));
-
-                        listViewContacts.setVisibility(View.VISIBLE);
-                        shimmerTextView.setVisibility(View.GONE);
+                    public void onClick(View v) {
+                        navigateToSettings.onEvent(null);
                     }
                 });
-
             }
         }
 
