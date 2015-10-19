@@ -77,7 +77,7 @@ public class ModelSettings {
                                     + formatNumber(phoneNo));
 
                             subscriber.onNext(new ContactAA(formatNumber(phoneNo)
-                                    , CacheContactsSettings.getContactsSyncData(formatNumber(phoneNo))));
+                                    , CacheContactsSettings.getContactsSyncData(formatNumber(phoneNo)), name));
                             //}
                             pCur.close();
                         }
@@ -91,6 +91,12 @@ public class ModelSettings {
 
     private Subscriber<ContactAA> sSetContactsToList(){
         return new Subscriber<ContactAA>() {
+
+            @Override
+            public void onStart() {
+                super.onStart();
+                request(1);
+            }
 
             @Override
             public void onCompleted() {
@@ -107,6 +113,7 @@ public class ModelSettings {
             @Override
             public void onNext(ContactAA contactAA) {
                 viewer.addContactToListView(contactAA);
+                request(1);
             }
         };
     }

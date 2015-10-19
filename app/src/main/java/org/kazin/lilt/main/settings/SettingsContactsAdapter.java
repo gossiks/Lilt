@@ -82,6 +82,8 @@ public class SettingsContactsAdapter extends BaseAdapter {
         holder.telephone.setText(contactForSettings.getTelephone());
 
         boolean sync = contactForSettings.getSync();
+
+        holder.syncSwitch.setOnCheckedChangeListener(null); //kludge - suppress call of OnSwitchListener when getView() is working.
         holder.syncSwitch.setChecked(sync);
         holder.syncSwitch.setOnCheckedChangeListener(new OnSwitchSyncListener(contactForSettings));
 
@@ -100,7 +102,7 @@ public class SettingsContactsAdapter extends BaseAdapter {
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             ContactAA contactForSettings = new ContactAA(
                      contact.getTelephone(), isChecked,contact.getName());
-            mChangeSyncContact.onEvent(contactForSettings);
+            mSyncStateListener.call(contactForSettings);
         }
     }
 
