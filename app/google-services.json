@@ -1,0 +1,73 @@
+{
+  "project_info": {
+    "project_number": "731395407005",
+    "firebase_url": "https://massive-seer-89115.firebaseio.com",
+    "project_id": "massive-seer-89115",
+    "storage_bucket": "massive-seer-89115.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:731395407005:android:e30071dc9f3b694b",
+        "android_client_info": {
+          "package_name": "org.kazin.timelike"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "731395407005-p0cpa62hpdukdh5sfpnf474uhes67s0o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHlJCH9Pz9vWFD4bDRje_rQjwXWgu82tk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:731395407005:android:0af605c63eb12233",
+        "android_client_info": {
+          "package_name": "org.kazin.lilt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "731395407005-p0cpa62hpdukdh5sfpnf474uhes67s0o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHlJCH9Pz9vWFD4bDRje_rQjwXWgu82tk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
