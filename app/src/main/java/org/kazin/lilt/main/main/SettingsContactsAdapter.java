@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import org.kazin.lilt.R;
 import org.kazin.lilt.objects.ContactForSettings;
+import org.kazin.lilt.objects.ContactForSettingsRealm;
 import org.kazin.lilt.objects.jEvent;
 
 import java.util.List;
@@ -86,7 +87,7 @@ public class SettingsContactsAdapter extends BaseAdapter {
 
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            ContactForSettings contactForSettings = new ContactForSettings(
+            ContactForSettingsRealm contactForSettings = new ContactForSettingsRealm(
                     contact.getName(), contact.getTelephone(), isChecked);
             mChangeSyncContact.onEvent(contactForSettings);
         }

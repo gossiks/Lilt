@@ -1,21 +1,21 @@
 package org.kazin.lilt.main.main;
 
 import android.content.Context;
-import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Switch;
 
 import com.romainpiel.shimmer.Shimmer;
 import com.romainpiel.shimmer.ShimmerTextView;
 
 import org.kazin.lilt.R;
 import org.kazin.lilt.objects.ContactForSettings;
+import org.kazin.lilt.objects.ContactForSettingsRealm;
 import org.kazin.lilt.objects.jEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import it.gmariotti.cardslib.library.internal.Card;
@@ -27,7 +27,7 @@ import it.gmariotti.cardslib.library.internal.ViewToClickToExpand;
 /**
  * Created by Alexey on 09.09.2015.
  */
-public class CardAdapterMain extends CardArrayAdapter{
+public class CardAdapterMain extends CardArrayAdapter {
     //const
     public static int CARD_TYPE_TELEPHONE = 0;
     public static int CARD_TYPE_RINGTONE = 1;
@@ -46,7 +46,7 @@ public class CardAdapterMain extends CardArrayAdapter{
 
     //custom cards
 
-    public static class CardTelephone extends Card{
+    public static class CardTelephone extends Card {
 
         jEvent event;
 
@@ -56,7 +56,7 @@ public class CardAdapterMain extends CardArrayAdapter{
             init();
         }
 
-        private void init(){
+        private void init() {
             CardHeader header = new CardHeader(getContext());
             header.setTitle("Telephone");
 
@@ -112,7 +112,7 @@ public class CardAdapterMain extends CardArrayAdapter{
             init();
         }
 
-        private void init(){
+        private void init() {
             CardHeader header = new CardHeader(getContext());
             header.setTitle("Ringtone");
             addCardHeader(header);
@@ -137,19 +137,19 @@ public class CardAdapterMain extends CardArrayAdapter{
         }
 
         //effects for text view
-        public void setText(String text){
+        public void setText(String text) {
             textView.setText(text);
         }
 
-        public void shimmerStart(){
+        public void shimmerStart() {
             animator.start(textView);
         }
 
-        public void shimmerStop(){
+        public void shimmerStop() {
             animator.cancel();
         }
 
-        private class CardExpandRingtone extends CardExpand{
+        private class CardExpandRingtone extends CardExpand {
             jEvent event;
 
             public CardExpandRingtone(Context context, jEvent event) {
@@ -172,7 +172,7 @@ public class CardAdapterMain extends CardArrayAdapter{
 
     }
 
-    public static class CardUpdateAllRingtones extends Card{
+    public static class CardUpdateAllRingtones extends Card {
         jEvent event;
 
         public CardUpdateAllRingtones(Context context, jEvent event) {
@@ -181,7 +181,7 @@ public class CardAdapterMain extends CardArrayAdapter{
             init();
         }
 
-        private void init(){
+        private void init() {
             setTitle("Update ringtones");
             addCardExpand(new CardExpandUpdateAll(getContext(), event));
         }
@@ -221,7 +221,7 @@ public class CardAdapterMain extends CardArrayAdapter{
 
     }
 
-    public static class CardSettings extends Card{
+    public static class CardSettings extends Card {
         jEvent onChangeSyncContactEvent;
         jEvent getAllContactsEvent;
         CardSettingsExpand cardSettingsExpand;
@@ -233,9 +233,9 @@ public class CardAdapterMain extends CardArrayAdapter{
             init();
         }
 
-        private void init(){
+        private void init() {
             setTitle("Settings");
-            cardSettingsExpand = new CardSettingsExpand(getContext(),onChangeSyncContactEvent);
+            cardSettingsExpand = new CardSettingsExpand(getContext(), onChangeSyncContactEvent);
             addCardExpand(cardSettingsExpand);
             setOnExpandAnimatorEndListener(new OnExpandAnimatorEndListener() {
                 @Override
@@ -256,11 +256,11 @@ public class CardAdapterMain extends CardArrayAdapter{
             setViewToClickToExpand(ViewToClickToExpand.builder().setupView(parent));
         }
 
-        public void setContactList(List<ContactForSettings> list){
+        public void setContactList(List<ContactForSettings> list) {
             cardSettingsExpand.setListContacts(list);
         }
 
-        private class CardSettingsExpand extends CardExpand{
+        private class CardSettingsExpand extends CardExpand {
             ShimmerTextView shimmerTextView;
             ListView listViewContacts;
             jEvent onChangeSyncContactEvent;
@@ -276,25 +276,24 @@ public class CardAdapterMain extends CardArrayAdapter{
                 shimmerTextView = (ShimmerTextView) view.findViewById(R.id.shimmer_loading_card_expand_settings);
                 listViewContacts = (ListView) view.findViewById(R.id.list_contacts_settings_card_setting_expand);
 
-                Log.d("apkapk","View getContext: "+ view.getContext()+" Just getContext: "+getContext());
+                Log.d("apkapk", "View getContext: " + view.getContext() + " Just getContext: " + getContext());
                 animator = new Shimmer();
                 animator.setDuration(3000);
                 onExpanded();
             }
 
-            private void onExpanded(){
+            private void onExpanded() {
                 animator.start(shimmerTextView);
                 //listViewContacts.setVisibility(View.GONE);
             }
 
             //methods for data upload
 
-            public void setListContacts(final List<ContactForSettings> list){
+            public void setListContacts(final List<ContactForSettings> list) {
                 MainActivity.getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         listViewContacts.setAdapter(new SettingsContactsAdapter(getContext(), list, onChangeSyncContactEvent));
-
                         listViewContacts.setVisibility(View.VISIBLE);
                         shimmerTextView.setVisibility(View.GONE);
                     }

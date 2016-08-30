@@ -1,14 +1,10 @@
 package org.kazin.lilt.objects;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
 /**
  * Created by Alexey on 16.09.2015.
  */
-public class ContactForSettings extends RealmObject {
+public class ContactForSettings {
     String name;
-    @PrimaryKey
     String telephone;
 
     boolean sync = true;

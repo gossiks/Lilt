@@ -3,7 +3,6 @@ package org.kazin.lilt.main.main;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -12,11 +11,11 @@ import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.util.Log;
 
-import com.devpaul.filepickerlibrary.FilePickerActivity;
-
 import org.kazin.lilt.backend.Backend;
 import org.kazin.lilt.managers.ProgressLoadingMan;
+import org.kazin.lilt.misc.Utils;
 import org.kazin.lilt.objects.ContactForSettings;
+import org.kazin.lilt.objects.ContactForSettingsRealm;
 import org.kazin.lilt.objects.LiltRingtone2;
 import org.kazin.lilt.objects.LiltUser;
 import org.kazin.lilt.objects.jCallback;
@@ -27,13 +26,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.exceptions.RealmMigrationNeededException;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
+
 /**
  * Created by Alexey on 30.08.2015.
  */
 public class ModelMain {
 
     //DEBUG REMEMBER
-    boolean doNotDisplayLoginDialog = true;
+    boolean doNotDisplayLoginDialog = false;
 
     //public const
     public static final int INTENT_REQUEST_PICK_RINGTONE = 1;
@@ -52,7 +60,8 @@ public class ModelMain {
     //count stuff
     private ProgressLoadingMan mProgressRingtonesLoading;
     private ContentResolver mContentResolver;
-    private DBHelper mDatabaseHelper;
+    private Realm mRealm;
+    private Context mContext;
 
     public ModelMain(ViewerMain viewer) {
         this.viewer = viewer;
@@ -60,41 +69,77 @@ public class ModelMain {
     }
 
     public static ModelMain getInstance(ViewerMain viewerIn) {
-        if(model == null){
+        if (model == null) {
             model = new ModelMain(viewerIn);
         }
-        if(viewer != viewerIn){
+        if (viewer != viewerIn) {
             viewer = viewerIn;
         }
         return model;
     }
 
 
-
-    public void onCreate() {
+    public void onCreate(Context context) {
+        mContext = context;
+        getDatabase();
         onResume();
     }
 
-    public void onResume(){
-        if(doNotDisplayLoginDialog){
-            mUser = new LiltUser("79639268115");
+    private Realm getDatabase() {
+        if (mRealm == null && mContext != null) {
+            RealmConfiguration realmConfiguration = new RealmConfiguration.Builder(mContext).build();
+            try {
+                mRealm = Realm.getInstance(realmConfiguration);
+            } catch (RealmMigrationNeededException e) {
+                try {
+                    Realm.deleteRealm(realmConfiguration);
+                    mRealm = Realm.getInstance(realmConfiguration);
+                } catch (Exception ex) {
+                    Utils.log(ex.toString());
+                }
+            }
         }
-        if (!isUserLoggedIn()){
-            viewer.showLoginDialog();
-        }
-        else{
-            viewer.setTelephone(mUser.getTelephoneNumber());
-            mBackend.getRingtoneTitle(mUser.getTelephoneNumber(), new GetRingtoneCallback());
-        }
+        return mRealm;
     }
 
-    public void onPause(){
-        mDatabaseHelper.close();
+    private Realm getDatabaseForThisThread() {
+        Realm database = null;
+        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder(mContext).build();
+        try {
+            database = Realm.getInstance(realmConfiguration);
+        } catch (RealmMigrationNeededException e) {
+            try {
+                Realm.deleteRealm(realmConfiguration);
+                database = Realm.getInstance(realmConfiguration);
+            } catch (Exception ex) {
+                Utils.log(ex.toString());
+            }
+        }
+        return database;
+    }
+
+    public void onResume() {
+        if (doNotDisplayLoginDialog) { // TODO DEV
+            mUser = new LiltUser("79639268115");
+            mRealm.beginTransaction();
+            mRealm.copyToRealm(mUser);
+            mRealm.commitTransaction();
+        }
+
+        mUser = mRealm.where(LiltUser.class).findFirst();
+        if (mUser != null) {
+            viewer.setTelephone(mUser.getTelephoneNumber());
+            if (mUser.hasRingtone()) {
+                viewer.setRingtoneTitle(mUser.getRingtoneName());
+            } else {
+                mBackend.getRingtoneTitle(mUser.getTelephoneNumber(), new GetRingtoneCallback());
+            }
+        }
     }
 
     //Dialog Login handling
     public void onDialogLoginEnterTel(String text) {
-        if(text.length()==0){
+        if (text.length() == 0) {
             viewer.showError("Enter the number, please");
         } else {
             sendAuthSms(text);
@@ -105,13 +150,13 @@ public class ModelMain {
     }
 
     public void onResendSms() {
-        sendAuthSms(mUser.getTelephoneNumber());
+        // sendAuthSms(mUser.getTelephoneNumber());
     }
 
-    private void sendAuthSms(String text){
+    private void sendAuthSms(String text) {
         Random generator = new Random();
         int random = generator.nextInt(10000);
-        if(mUser == null){
+        if (mUser == null) {
             mUser = new LiltUser(text);
         }
         mUser.setCodeApprove(String.format("%04d", random));
@@ -120,9 +165,10 @@ public class ModelMain {
     }
 
     public void onApproveCodeEnter(String text) {
-        if(mUser.getCodeApprove().equals(text)){
+        if (mUser.getCodeApprove().equals(text)) {
             viewer.showToast("Phone approved!");
             viewer.dismissLoginApproveDialog();
+            onResume(); //TODO redo to NOT RESUME
         } else {
             viewer.showError("Wrong code!");
         }
@@ -134,7 +180,7 @@ public class ModelMain {
             @Override
             protected Void doInBackground(Void... params) {
                 List<String> listOfAllContactNumbers = getAllContactsFromPhone();
-                if(listOfAllContactNumbers == null){
+                if (listOfAllContactNumbers == null) {
                     return null;
                 }
                 mProgressRingtonesLoading = new ProgressLoadingMan(listOfAllContactNumbers.size());
@@ -146,60 +192,71 @@ public class ModelMain {
     }
 
 
-
     public void onChangeRingtoneForUser() {
         viewer.showRingtonePicker();
     }
 
 
     public void onPickRingtoneFile(File ringtone) {
-        if(isUserLoggedIn()){
+/*        if (isUserLoggedIn()) {
             LiltRingtone2 liltRingtone = new LiltRingtone2(ringtone, mUser.getTelephoneNumber());
             viewer.showLoadingRingtone();
             mBackend.saveRingTone(mUser.getTelephoneNumber(), liltRingtone, new SaveRingtoneCallback());
         } else {
             onResume();
-        }
+        }*/
     }
 
     //for Settings Card
 
     public void onGetAllContactsForSettings() {
-        AsyncTask<Void,Void,Void> getAllContactsForSettings = new AsyncTask<Void, Void, Void>() {
+        Observable.just(getAllContactsForSettingsFromPhone()).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).map(new Func1<List<ContactForSettingsRealm>, List<ContactForSettings>>() {
+            @Override
+            public List<ContactForSettings> call(List<ContactForSettingsRealm> contactForSettings) {
+                List<ContactForSettings> conts = new ArrayList<ContactForSettings>();
+                for (ContactForSettingsRealm c : contactForSettings) {
+                    conts.add(new ContactForSettings(c.getName(), c.getTelephone(), c.getSync()));
+                }
+                return conts;
+            }
+        }).subscribe(new Subscriber<List<ContactForSettings>>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(List<ContactForSettings> listObservable) {
+                viewer.setListOfContactsInSettings(listObservable);
+            }
+        });
+
+/*        AsyncTask<Void, Void, Void> getAllContactsForSettings = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
-                viewer.setListOfContactsInSettings(getAllContactsForSettingsFromPhone());
+
+                viewer.setListOfContactsInSettings(null);
                 return null;
             }
         };
-        getAllContactsForSettings.execute();
+        getAllContactsForSettings.execute();*/
     }
 
-    public void onChangeSyncContact(ContactForSettings contact) { //TODO databse to field
-        SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
-        /*db.query("contacts", new String[]{"telephone", "sync"}
-                , "telephone = "+contact.getTelephone(), null,null,null,null);*/
-
-        ContentValues contactToDataBase = new ContentValues();
-        contactToDataBase.put("telephone", "sds");
-        //contactToDataBase.put("sync", (contact.getSync() ? 1 : 0));
-        contactToDataBase.put("sync", 1);
-        contactToDataBase.put("name", "Sfa");
-
-        db.insert("contacts", null, contactToDataBase);
-        Cursor c = db.query("contacts",null,null,null,null,null,null);
-        while(c.moveToNext()){
-            Log.d("apkapk", "Database after pnChangeSync: "+c.getString(1) +" "+ c.getString(2)+" "+c.getString(3));
-        }
-
-        db.close();
+    public void onChangeSyncContact(ContactForSettingsRealm contact) {
+        getDatabase().beginTransaction();
+        getDatabase().copyToRealmOrUpdate(contact);
+        getDatabase().commitTransaction();
     }
-
 
     //callbacks
 
     //setRingtone for user callback
-    private class SaveRingtoneCallback implements jCallback{
+    private class SaveRingtoneCallback implements jCallback {
         @Override
         public void success(Object object) {
             viewer.unshowLoadingRingtone();
@@ -218,7 +275,7 @@ public class ModelMain {
     private class GetRingtoneCallback implements jCallback {
         @Override
         public void success(Object ringtoneTitle) {
-            viewer.setRingtoneTitle((String)ringtoneTitle);
+            viewer.setRingtoneTitle((String) ringtoneTitle);
         }
 
         @Override
@@ -242,7 +299,7 @@ public class ModelMain {
     }
 
     //get all ringtones callback
-    public class GetAllRingtonesCallback implements jCallback{
+    public class GetAllRingtonesCallback implements jCallback {
         @Override
         public void success(Object object) {
             ///TODO
@@ -265,7 +322,7 @@ public class ModelMain {
         @Override
         public void progress(Object progress) {
             progressManager.addProgress();
-            if(progress!=null){
+            if (progress != null) {
                 setContactRingtone((LiltRingtone2) progress);
             } else {
                 //eventually blank
@@ -276,81 +333,41 @@ public class ModelMain {
         @Override
         public void failItem(String error) {
             progressManager.addError();
-            Log.d("apkapk", "GetAllRingtonesProgress - item error: "+error );
+            Log.d("apkapk", "GetAllRingtonesProgress - item error: " + error);
         }
     }
 
     //misc user methods
-    private boolean isUserLoggedIn(){
-        return mUser != null;
+    private boolean isUserLoggedIn() {
+        return mRealm.where(LiltUser.class).findFirst() != null;
     }
 
-    public void logOff(){
+    public void logOff() {
         mUser = null;
         onResume();
     }
 
     //phone contact method
 
-    private void setContactRingtone(LiltRingtone2 ringtone){
+    private void setContactRingtone(LiltRingtone2 ringtone) {
         mContentResolver = MainActivity.getActivity().getContentResolver();
-        Uri uri  = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,Uri.encode(ringtone.getTelephoneNumber()));
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(ringtone.getTelephoneNumber()));
         Cursor contactCursor = mContentResolver.query(uri, null, null, null, null);
         //contactCursor.moveToNext();
-           while(contactCursor.moveToNext()){
-                String id =  contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts._ID));
-                Uri contactUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, id);
-                ContentValues values = new ContentValues(); //targetContact.toString()
+        while (contactCursor.moveToNext()) {
+            String id = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts._ID));
+            Uri contactUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, id);
+            ContentValues values = new ContentValues(); //targetContact.toString()
 
-                values.put(ContactsContract.Contacts.CUSTOM_RINGTONE,
+            values.put(ContactsContract.Contacts.CUSTOM_RINGTONE,
                     Uri.fromFile(ringtone.getFileRingtone()).toString());
 
-                mContentResolver.update(contactUri, values, null, null);
+            mContentResolver.update(contactUri, values, null, null);
         }
     }
 
-    private List<String> getAllContactsFromPhone(){
+    private List<String> getAllContactsFromPhone() {
         List<String> phoneNumbers = null;
-        ContentResolver cr = MainActivity.getActivity().getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-                null, null, null, null);
-        if (cur.getCount() > 0) {
-            phoneNumbers = new ArrayList<>(cur.getCount());
-            while (cur.moveToNext()) {
-                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY));
-                if (Integer.parseInt(cur.getString(
-                        cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                    Cursor pCur = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            new String[]{id}, null);
-                    //while (pCur.moveToNext()) { //this is for all phones
-                        pCur.moveToLast(); //hope this is the main number
-                        String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
-                                + formatNumber(phoneNo));
-                        phoneNumbers.add(formatNumber(phoneNo));
-                    //}
-                    pCur.close();
-                }
-            }
-            cur.close();
-        }
-
-        return phoneNumbers;
-    }
-
-    //TODO repeat code alert
-
-    private List<ContactForSettings> getAllContactsForSettingsFromPhone(){
-        //database init
-        mDatabaseHelper = new DBHelper(viewer.getMainActivityContext(), "contacts", 1);
-        SQLiteDatabase database = mDatabaseHelper.getWritableDatabase();
-        Cursor databaseCursor = null;
-
-        List<ContactForSettings> phoneNumbers = null;
         ContentResolver cr = MainActivity.getActivity().getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
                 null, null, null, null);
@@ -371,22 +388,7 @@ public class ModelMain {
                     String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                     Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
                             + formatNumber(phoneNo));
-                    databaseCursor = database.query("contacts", new String[]{"telephone", "sync"}
-                            , "telephone = "+formatNumber(phoneNo), null,null,null,null);
-                    boolean syncContact = true;
-                    if(databaseCursor.moveToFirst()){
-                        int i =  databaseCursor.getInt(databaseCursor.getColumnIndex("sync"));
-                        switch (i){
-                            case 0:
-                                syncContact = false;
-                                break;
-                            case 1:
-                                syncContact = true;
-                                break;
-                        }
-
-                    }
-                    phoneNumbers.add(new ContactForSettings(name, formatNumber(phoneNo), syncContact));
+                    phoneNumbers.add(formatNumber(phoneNo));
                     //}
                     pCur.close();
                 }
@@ -397,11 +399,98 @@ public class ModelMain {
         return phoneNumbers;
     }
 
+    //TODO repeat code alert
+
+    private List<ContactForSettingsRealm> getAllContactsForSettingsFromPhone() {
+        List<ContactForSettingsRealm> contactsForSettings = null;
+        Realm databaseForThread = null;
+        ContentResolver cr = MainActivity.getActivity().getContentResolver();
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                null, null, null, null);
+        if (cur.getCount() > 0) {
+            contactsForSettings = new ArrayList<>();
+
+
+            while (cur.moveToNext()) {
+                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY));
+                if (Integer.parseInt(cur.getString(
+                        cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                    Cursor pCur = cr.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            new String[]{id}, null);
+                    //while (pCur.moveToNext()) { //this is for all phones
+                    pCur.moveToLast(); //hope this is the main number
+                    String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    contactsForSettings.add(new ContactForSettingsRealm(name, formatNumber(phoneNo), true));
+                    pCur.close();
+                }
+            }
+            databaseForThread = getDatabaseForThisThread();
+            databaseForThread.beginTransaction();
+            if (!contactsForSettings.isEmpty()) {
+                for (ContactForSettingsRealm cont : contactsForSettings) {
+                    ContactForSettingsRealm contactInDb = databaseForThread.where(ContactForSettingsRealm.class).equalTo("telephone", cont.getTelephone()).findFirst(); //hope it only one instance
+                    if (contactInDb == null) {
+                        databaseForThread.copyToRealmOrUpdate(cont);
+                    }
+                }
+            }
+            databaseForThread.commitTransaction();
+
+          /*  while (cur.moveToNext()) {
+                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY));
+                if (Integer.parseInt(cur.getString(
+                        cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                    Cursor pCur = cr.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            new String[]{id}, null);
+                    //while (pCur.moveToNext()) { //this is for all phones
+                    pCur.moveToLast(); //hope this is the main number
+                    String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    Log.d("apkapk", "getAllcontacts: " + "Name: " + name + ", Phone No: "
+                            + formatNumber(phoneNo));
+                    databaseCursor = database.query("contacts", new String[]{"telephone", "sync"}
+                            , "telephone = " + formatNumber(phoneNo), null, null, null, null);
+                    boolean syncContact = true;
+                    if (databaseCursor.moveToFirst()) {
+                        int i = databaseCursor.getInt(databaseCursor.getColumnIndex("sync"));
+                        switch (i) {
+                            case 0:
+                                syncContact = false;
+                                break;
+                            case 1:
+                                syncContact = true;
+                                break;
+                        }
+
+                    }
+                    contactsForSettings.add(new ContactForSettingsRealm(name, formatNumber(phoneNo), syncContact));
+                    //}
+                    pCur.close();
+                }
+            }
+            cur.close();*/
+        }
+        cur.close();
+
+        databaseForThread.beginTransaction();
+        List<ContactForSettingsRealm> allContactFromDatabase = databaseForThread.where(ContactForSettingsRealm.class).findAll();
+        databaseForThread.commitTransaction();
+
+        return allContactFromDatabase;
+    }
+
     //Database helper
-    private class DBHelper extends SQLiteOpenHelper{
+    private class DBHelper extends SQLiteOpenHelper {
 
         public DBHelper(Context context, String name, int version) {
-            super(context, name, null,version);
+            super(context, name, null, version);
         }
 
         @Override
@@ -409,7 +498,7 @@ public class ModelMain {
             db.execSQL("create table contacts ("
                     + "id integer primary key autoincrement,"
                     + "name text,"
-                    + "telephone text,"+"sync integer" + ");");
+                    + "telephone text," + "sync integer" + ");");
         }
 
         @Override
@@ -418,11 +507,11 @@ public class ModelMain {
         }
     }
 
-    private String formatNumber(String telephoneNumber){
+    private String formatNumber(String telephoneNumber) {
         //String normalizedNumber = PhoneNumberUtils.normalizeNumber(telephoneNumber); this works only in lollipop
         String normalizedNumber = telephoneNumber.replaceAll("[^\\d]", "");
-        if (normalizedNumber.startsWith("8") & normalizedNumber.length()==11){ //walkaround for russian 8 instead of +7
-            normalizedNumber = 7+normalizedNumber.substring(1);
+        if (normalizedNumber.startsWith("8") & normalizedNumber.length() == 11) { //walkaround for russian 8 instead of +7
+            normalizedNumber = 7 + normalizedNumber.substring(1);
         }
         return normalizedNumber;
     }

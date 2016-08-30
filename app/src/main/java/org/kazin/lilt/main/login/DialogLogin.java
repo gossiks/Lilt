@@ -39,7 +39,7 @@ public class DialogLogin extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()); //this class walkaround the necessity of dismissing of dialog if button handler is not null
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()); //this class workaround the necessity of dismissing of dialog if button handler is not null
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View convertView = inflater.inflate(R.layout.dialog_login, null);
 

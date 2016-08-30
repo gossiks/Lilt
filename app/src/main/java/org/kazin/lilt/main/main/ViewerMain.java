@@ -3,20 +3,14 @@ package org.kazin.lilt.main.main;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.devpaul.filepickerlibrary.FilePickerActivity;
-import com.devpaul.filepickerlibrary.enums.FileScopeType;
-import com.devpaul.filepickerlibrary.enums.FileType;
-
 import org.kazin.lilt.main.login.DialogLogin;
 import org.kazin.lilt.main.login.DialogLoginApprove;
 import org.kazin.lilt.objects.ContactForSettings;
+import org.kazin.lilt.objects.ContactForSettingsRealm;
 import org.kazin.lilt.objects.jEvent;
 
 import java.io.File;
@@ -31,6 +25,7 @@ import it.gmariotti.cardslib.library.internal.Card;
  */
 public class ViewerMain {
 
+    private static final int PICKFILE_REQUEST_CODE = 0;
     private static ViewerMain viewer;
     private static ModelMain model;
     private static MainActivity activity;
@@ -61,8 +56,8 @@ public class ViewerMain {
     }
 
     public void onCreate() {
-        initCardAdapter(MainActivity.getMainContext());
-        model.onCreate();
+        initCardAdapter(MainActivity.getMainContext().getApplicationContext()); //TODO redo this context mess
+        model.onCreate(MainActivity.getMainContext().getApplicationContext());
     }
 
     private void initCardAdapter(Context context){
@@ -106,7 +101,7 @@ public class ViewerMain {
         mCardSettingsOnChangeSyncEvent = new jEvent() {
             @Override
             public void onEvent(Object object) {
-                model.onChangeSyncContact((ContactForSettings) object);
+                model.onChangeSyncContact((ContactForSettingsRealm) object);
             }
         };
 
@@ -182,10 +177,14 @@ public class ViewerMain {
 
 
     public void showRingtonePicker(){
-        Intent filePickerIntent = new Intent(activity, FilePickerActivity.class);
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("file/*");
+        startActivityForResult(intent, PICKFILE_REQUEST_CODE);
+
+      /*  Intent filePickerIntent = new Intent(activity, FilePickerActivity.class);
 
         filePickerIntent.putExtra(FilePickerActivity.REQUEST_CODE, FilePickerActivity.REQUEST_FILE);
-        startActivityForResult(filePickerIntent,FilePickerActivity.REQUEST_FILE);
+        startActivityForResult(filePickerIntent,FilePickerActivity.REQUEST_FILE);*/
 
     }
 
@@ -198,9 +197,9 @@ public class ViewerMain {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data ){
         switch (requestCode){
-            case FilePickerActivity.REQUEST_FILE:
+            case PICKFILE_REQUEST_CODE:
                 if(resultCode == Activity.RESULT_OK){
-                    String filePath = data.getStringExtra(FilePickerActivity.FILE_EXTRA_DATA_PATH);
+                    String filePath = data.getDataString();
                     if(filePath!=null){
                         File ringtone = new File(filePath);
                         model.onPickRingtoneFile(ringtone);
@@ -240,9 +239,5 @@ public class ViewerMain {
     //misc
     public Context getMainActivityContext(){
         return activity.getApplicationContext();
-    }
-
-    public void onPause() {
-        model.onPause();
     }
 }
